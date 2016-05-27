@@ -44,7 +44,7 @@
 	"promptly": "1.1.0",
 	"morgan": "1.7.0",
 	"node-schedule": "1.1.0",
-	"unzip": "0.1.11",
+	"unzip": "https://github.com/Omneedia/unzip/tarball/master",
 	"uglify-js": "2.6.2",
 	"wrench": "1.5.9",
 	"xml2js": "0.4.16",
