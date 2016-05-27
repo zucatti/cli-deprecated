@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8db";
+$_VERSION = "0.9.8dc";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -2728,7 +2728,7 @@ function make_libraries() {
         } else {
             require.push({
                 type: "local"
-                , src: _require[i]+"?"+uniqueid.v4()
+                , src: _require[i]
             });
         }
     };
