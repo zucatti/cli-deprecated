@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8dc";
+$_VERSION = "0.9.8dd";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5463,16 +5463,15 @@ figlet(' omneedia', {
         var lst = fs.readFileSync(__dirname + path.sep + 'repositories.config', 'utf-8').split('\n');
         download_repos(lst, 0, [], function (r) {
             fs.writeFileSync(__dirname + path.sep + '.repositories', JSON.stringify(r, null, 4));
-            process.chdir(__dirname + path.sep + '..');
+            process.chdir(__dirname);
 			shelljs.exec('git fetch --all', {
-				silent: true
+				silent: false
 			});
 			shelljs.exec('git reset --hard origin/master', {
-				silent: true
+				silent: false
 			});
-			process.chdir(__dirname);
 			shelljs.exec('npm install', {
-			    silent: true
+			    silent: false
 			});
             console.log('  Done.');
         });
