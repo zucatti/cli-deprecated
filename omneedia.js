@@ -5465,13 +5465,13 @@ figlet(' omneedia', {
             fs.writeFileSync(__dirname + path.sep + '.repositories', JSON.stringify(r, null, 4));
             process.chdir(__dirname);
 			shelljs.exec('git fetch --all', {
-				silent: false
+				silent: true
 			});
 			shelljs.exec('git reset --hard origin/master', {
-				silent: false
+				silent: true
 			});
 			shelljs.exec('npm install', {
-			    silent: false
+			    silent: true
 			});
             console.log('  Done.');
         });
