@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8dd";
+$_VERSION = "0.9.8de";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5352,7 +5352,9 @@ figlet(' omneedia', {
     };
     console.log('\n        Omneedia Builder v' + $_VERSION);
     console.log(art.cyan);
-
+	
+	if (process.args.welcome) return;
+	
     if (argv.length <= 2) {
         console.log('    Usage: omneedia command [options]'.yellow);
         console.log('');
