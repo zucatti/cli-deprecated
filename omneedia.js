@@ -5407,6 +5407,22 @@ figlet(' omneedia', {
 		
 		var isWin = /^win/.test(process.platform);
 		
+		if (def=="backup") {
+			var manifest = PROJECT_HOME + path.sep + 'app.manifest';
+			if (fs.existsSync(manifest)) {
+				var manifest=JSON.parse(fs.readFileSync(manifest));
+				if (!fs.existsSync(PROJECT_HOME + path.sep +'src'+path.sep+'Contents'+path.sep+'db')) fs.mkdirSync(PROJECT_HOME + path.sep +'src'+path.sep+'Contents'+path.sep+'db');
+				for (var i=0;i<manifest.db.length;i++) {
+					console.log("	- Dump "+manifest.db[i]);
+					shelljs.exec('mysqldump -h 127.0.0.1 --single-transaction -u root '+manifest.db[i]+' > "'+PROJECT_HOME + path.sep +'src'+path.sep+'Contents'+path.sep+'db'+path.sep+manifest.db[i]+'.dump"');
+				};
+				console.log('	Done.');
+			} else {
+			
+			};
+			return;
+		}
+		
 		if (def=="start") {
 			if (!isWin) {
 				shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" &',{silent: true});
@@ -6928,7 +6944,6 @@ figlet(' omneedia', {
                 };
                 _App.init(app, express);
             };
-
             if (process.args.sandbox) {
 				
 				var jsoconf=JSON.parse(fs.readFileSync(__dirname+path.sep+'..'+path.sep+'config'+path.sep+'sandbox.json'));
