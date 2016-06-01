@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8f";
+$_VERSION = "0.9.8g";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5425,11 +5425,11 @@ figlet(' omneedia', {
 		
 		if (def=="start") {
 			if (!isWin) {
-				shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" &',{silent: true});
 				var pid=userdir+path.sep+"db"+path.sep+".pid";
-				var p=shelljs.exec('ps -ef |grep '+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld',{silent:true});
-				fs.writeFileSync(pid,p.output.split(' ')[3]);
-				var msg='  - mySQL server running [PID '+p.output.split(' ')[3]+']\n';
+				shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" & echo $! > "'+pid+'"',{silent: true});
+				var pido=fs.readFileSync(pid,'utf-8');
+				fs.writeFileSync(pid,pido.trim());
+				var msg='  - mySQL server running [PID '+pido.trim()+']\n';
 			} else {
 				var pid=userdir+path.sep+"db"+path.sep+".pid";
 				var _cmd=__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld --defaults-file='+userdirdata+path.sep+'my.ini -b '+__dirname+path.sep+'mysql --datadir='+data;
