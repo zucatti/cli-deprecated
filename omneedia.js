@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8e";
+$_VERSION = "0.9.8f";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5399,18 +5399,44 @@ figlet(' omneedia', {
 		myini.push('innodb_force_recovery=0');
 		myini.push('port=3306');
 		myini.push('federated');    
-		fs.writeFileSync(userdirdata+path.sep+"my.ini",myini.join('\n'));
+		fs.writeFileSync(userdirdata+path.sep+"my.ini",myini.join('\r\n'));
 		
 		if (!fs.existsSync(data+path.sep+"auto.cnf")) {
 			shelljs.exec(__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" --initialize-insecure');
 		};
 		
+		var isWin = /^win/.test(process.platform);
+		
 		if (def=="start") {
-			shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" &',{silent: true});
-			var pid=userdir+path.sep+"db"+path.sep+".pid";
-			var p=shelljs.exec('ps -ef |grep '+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld',{silent:true});
-			fs.writeFileSync(pid,p.output.split(' ')[3]);
-			var msg='  - mySQL server running [PID '+p.output.split(' ')[3]+']\n';
+			if (!isWin) {
+				shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" &',{silent: true});
+				var pid=userdir+path.sep+"db"+path.sep+".pid";
+				var p=shelljs.exec('ps -ef |grep '+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld',{silent:true});
+				fs.writeFileSync(pid,p.output.split(' ')[3]);
+				var msg='  - mySQL server running [PID '+p.output.split(' ')[3]+']\n';
+			} else {
+				var pid=userdir+path.sep+"db"+path.sep+".pid";
+				var _cmd=__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld --defaults-file='+userdirdata+path.sep+'my.ini -b '+__dirname+path.sep+'mysql --datadir='+data;
+				var cmd='start /b '+_cmd;
+				fs.writeFileSync(userdirdata+path.sep+'mysql.cmd',cmd);
+				var spawn=require('child_process').exec;
+				spawn(userdirdata+path.sep+'mysql.cmd',[],{detached: false});
+				shelljs.exec("Wmic /output:\""+pid+"\" process where (CommandLine like '%mysqld%') get Name,CommandLine,ProcessId");
+				var _pid=fs.readFileSync(pid,'ucs2').split('\r\n');
+				var pido=-1;
+				for (var i=0;i<_pid.length;i++) {
+					if(_pid[i].indexOf("my.ini")>-1) var pido=i;
+				};
+				if (pido!=-1) {
+					pido=_pid[pido].substr(_pid[pido].lastIndexOf('mysqld.exe')+11,255).trim();
+					fs.writeFileSync(pid,pido);
+					var msg='  - mySQL server running [PID '+pido+']\n';
+				} else {
+					var msg='  ! mySQL not running\n';
+					console.log(msg.yellow);
+					return;
+				}
+			};
 			console.log(msg.green);	
 		};
 		
@@ -5418,7 +5444,11 @@ figlet(' omneedia', {
 			var pid=userdir+path.sep+"db"+path.sep+".pid";
 			if (fs.existsSync(pid)) {
 				var _pid=fs.readFileSync(pid,'utf-8');
-				shelljs.exec('kill -9 '+_pid);
+				if (!isWin) {
+					shelljs.exec('kill -9 '+_pid);
+				} else {
+					shelljs.exec('taskkill /F /PID '+_pid,{silent:true});
+				};
 				console.log('  - mySQL service stopped.\n'.green);
 				fs.unlinkSync(pid);
 			} else {
