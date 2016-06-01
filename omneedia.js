@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8de";
+$_VERSION = "0.9.8e";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5406,8 +5406,25 @@ figlet(' omneedia', {
 		};
 		
 		if (def=="start") {
-			shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" --initialize-insecure &>"'+userdirdata+path.sep+"my.log"+'" &');				
+			shelljs.exec('nohup "'+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld" --defaults-file="'+userdirdata+path.sep+'my.ini" -b "'+__dirname+path.sep+'mysql'+'" --datadir="'+data+'" &>"'+userdirdata+path.sep+"my.log"+'" &',{silent: true});
+			var pid=userdir+path.sep+"db"+path.sep+".pid";
+			var p=shelljs.exec('ps -ef |grep '+__dirname+path.sep+'mysql'+path.sep+'bin'+path.sep+'mysqld',{silent:true});
+			fs.writeFileSync(pid,p.output.split(' ')[3]);
+			var msg='  - mySQL server running [PID '+p.output.split(' ')[3]+']\n';
+			console.log(msg.green);	
 		};
+		
+		if (def=="stop") {
+			var pid=userdir+path.sep+"db"+path.sep+".pid";
+			if (fs.existsSync(pid)) {
+				var _pid=fs.readFileSync(pid,'utf-8');
+				shelljs.exec('kill -9 '+_pid);
+				console.log('  - mySQL service stopped.\n'.green);
+				fs.unlinkSync(pid);
+			} else {
+				console.log('  ! mySQL server seems not running\n'.yellow);	
+			};
+		};		
 
 		return;
 		
