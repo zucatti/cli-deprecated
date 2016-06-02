@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8h";
+$_VERSION = "0.9.8i";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5594,7 +5594,7 @@ figlet(' omneedia', {
     if (process.args.code) {
         var exec = require('child_process').spawn;
         var os = require('os');
-        if (os.platform().indexOf('darwin') > -1) exec('open', ["-a", __dirname + path.sep + 'brackets' + path.sep + 'Brackets.app', PROJECT_HOME]).unref();
+        if (os.platform().indexOf('darwin') > -1) exec(__dirname + path.sep + 'brackets' + path.sep + 'Brackets.app'+ path.sep +'Contents'+ path.sep +'Resources'+ path.sep +'brackets.sh', [PROJECT_HOME]).unref();
         else if (os.platform().indexOf('win') > -1) {
 			var _cmd=__dirname + path.sep + 'brackets' + path.sep + 'BracketsPortable %1';
 			var cmd='start /b '+_cmd;
