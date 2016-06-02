@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8g";
+$_VERSION = "0.9.8h";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -3933,7 +3933,7 @@ if (!process.args.sandbox) {
             }
         };
 
-        if (setmeup) {
+        if (setmeup && setmeup.indexOf('--')==-1) {
             if (fs.existsSync(PROJECT_HOME + path.sep + 'etc' + path.sep + 'settings-' + setmeup + '.json')) {
                 var _set = fs.readFileSync(PROJECT_HOME + path.sep + 'etc' + path.sep + 'settings-' + setmeup + '.json', 'utf-8');
                 MSettings = JSON.parse(_set);
@@ -5591,11 +5591,18 @@ figlet(' omneedia', {
 	};
 
     // launcher
-    if (argv.indexOf('code') > -1) {
+    if (process.args.code) {
         var exec = require('child_process').spawn;
         var os = require('os');
         if (os.platform().indexOf('darwin') > -1) exec('open', ["-a", __dirname + path.sep + 'brackets' + path.sep + 'Brackets.app', PROJECT_HOME]).unref();
-        else if (os.platform().indexOf('win') > -1) exec(__dirname + path.sep + 'brackets' + path.sep + 'BracketsPortable', [PROJECT_HOME]).unref();
+        else if (os.platform().indexOf('win') > -1) {
+			var _cmd=__dirname + path.sep + 'brackets' + path.sep + 'BracketsPortable %1';
+			var cmd='start /b '+_cmd;
+			fs.writeFileSync(__dirname+path.sep+'brackets.cmd',cmd);
+			var spawn=require('child_process').spawn;
+			spawn(__dirname+path.sep+'brackets.cmd',[PROJECT_HOME],{detached: false});			
+			//exec(__dirname + path.sep + 'brackets' + path.sep + 'BracketsPortable', [PROJECT_HOME]);
+		}
     };
 
     // Create interface
