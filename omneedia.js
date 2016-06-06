@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8jb";
+$_VERSION = "0.9.8k";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -3454,7 +3454,7 @@ function res_html_compile() {
 			
 			if (ocfg.current["publish.host"]) {
 				var publish_host=ocfg.current["publish.host"];
-				if (publish_host.indexOf('://')==-1) publish_host='http://';
+				if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
 				publish_host+=':'+port;
 				__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
 			} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
@@ -3505,7 +3505,7 @@ function res_html_compile() {
 						
 						if (ocfg.current["publish.host"]) {
 							var publish_host=ocfg.current["publish.host"];
-							if (publish_host.indexOf('://')==-1) publish_host='http://';
+							if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
 							publish_host+=':'+port;
 							__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
 						} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
@@ -3545,7 +3545,7 @@ function res_html_compile() {
 				__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
 			} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
 
-			var favicon = "<script>"+__CLUSTER__+"var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
+			var favicon = "<script>"+__CLUSTER__+";var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
 			var launcher = fs.readFileSync(__dirname+path.sep+'tpl'+path.sep+'oa'+path.sep+'bootstrap_prod.tpl');
 			tpl = tpl.replace('</head>','<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
 			tpl = tpl.replace('</body>',favicon+launcher+'</body>');
@@ -4135,8 +4135,7 @@ function build_production() {
 					// OLD SCHOOL
 					
                     if (!ocfg.current["publish.host"]) {
-                        console.log('  ! Publishing failed. No publish.host defined'.yellow);
-                        return;
+                        ocfg.current["publish.host"]="cluster.omneedia.com";
                     }
                     // get last drone
                     var p = glob.readdirSyncRecursive(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production');
@@ -4148,7 +4147,7 @@ function build_production() {
                     if (ocfg.current["publish.port"]) var port = ocfg.current["publish.port"];
                     else var port = 9191;
 					var publish_host=ocfg.current["publish.host"];
-					if (publish_host.indexOf('://')==-1) publish_host='http://';
+					if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
 					publish_host+=':'+port;
                     var req = request.post(publish_host + "/upload", function (err, resp, body) {
                         console.log(err);
