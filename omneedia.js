@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8i";
+$_VERSION = "0.9.8j";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -3387,49 +3387,89 @@ function make_res() {
 
 function res_html_compile() {
     if (Settings.TYPE == "mobile") {
-        var css = "";
-        var links = [];
-        links.push('<meta name="HandheldFriendly" content="true"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">');
-        links.push('<link rel="apple-touch-icon" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon.png') + '">');
-        links.push('<link rel="apple-touch-icon" sizes="72x72" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@72.png') + '" />');
-        links.push('<link rel="apple-touch-icon" sizes="114x114" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@114.png') + '" />');
-        links.push('<link rel="apple-touch-icon" sizes="144x144" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@144.png') + '" />');
-        var linkme = false;
-        var parser = new htmlparser.Parser({
-            onopentag: function (name, attribs) {
-                if (name === "link") linkme = true;
-            }
-            , ontext: function (text) {
-                if (linkme) {
-                    css += encodeCSS(text);
-                };
-            }
-            , onclosetag: function (tagname) {
-                if (tagname === "head") {
-                    linkme = false;
-                };
-                if (tagname === "html") {
-                    var link = require('sqwish').minify(css);
-                    var html = fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html", "utf-8");
-                    var title = html.split('<title>')[1].split('</title')[0];
-                    var spinner = html.split('<script>')[1].split('</script>')[0].replace(/\s{2,}/g, '');
-                    //var favicon="<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64,"+b64(PROJECT_WEB+path.sep+'Contents'+path.sep+'Resources'+path.sep+'favicon.ico')+"';docHead.appendChild(newLink);</script>";
-                    var body = html.split('<body ')[1].split('<script src="http://cdn.omneedia.com/public/requirejs/require.js"')[0].replace(/\s{2,}/g, '');					
-                    var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
-                    //var launcher='<script src="Contents/Application.js"></script>';
-                    if (process.argv.indexOf("unsafe") > -1)
-                        var html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'"><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
-                    else
-                        var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
-                    var html = html.replace(/>>/g, '>');
-                    html = html.replace('<title>', '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>');
-                    fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", html);
-                    make_res();
-                }
-            }
-        });
-        parser.write(fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html"));
-        parser.end();
+		var css = "";
+		if (!fs.existsSync(PROJECT_HOME+path.sep+".template")) {
+			// OLD SCHOOL
+			var css = "";
+			var links = [];
+			links.push('<meta name="HandheldFriendly" content="true"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">');
+			links.push('<link rel="apple-touch-icon" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon.png') + '">');
+			links.push('<link rel="apple-touch-icon" sizes="72x72" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@72.png') + '" />');
+			links.push('<link rel="apple-touch-icon" sizes="114x114" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@114.png') + '" />');
+			links.push('<link rel="apple-touch-icon" sizes="144x144" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@144.png') + '" />');
+			var linkme = false;
+			var parser = new htmlparser.Parser({
+				onopentag: function (name, attribs) {
+					if (name === "link") linkme = true;
+				}
+				, ontext: function (text) {
+					if (linkme) {
+						css += encodeCSS(text);
+					};
+				}
+				, onclosetag: function (tagname) {
+					if (tagname === "head") {
+						linkme = false;
+					};
+					if (tagname === "html") {
+						var link = require('sqwish').minify(css);
+						var html = fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html", "utf-8");
+						var title = html.split('<title>')[1].split('</title')[0];
+						var spinner = html.split('<script>')[1].split('</script>')[0].replace(/\s{2,}/g, '');
+						//var favicon="<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64,"+b64(PROJECT_WEB+path.sep+'Contents'+path.sep+'Resources'+path.sep+'favicon.ico')+"';docHead.appendChild(newLink);</script>";
+						var body = html.split('<body ')[1].split('<script src="http://cdn.omneedia.com/public/requirejs/require.js"')[0].replace(/\s{2,}/g, '');					
+						var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
+						//var launcher='<script src="Contents/Application.js"></script>';
+						if (process.argv.indexOf("unsafe") > -1)
+							var html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'"><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
+						else
+							var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
+						var html = html.replace(/>>/g, '>');
+						html = html.replace('<title>', '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>');
+						fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", html);
+						make_res();
+					}
+				}
+			});
+			parser.write(fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html"));
+			parser.end();
+		} else {
+			// NEW SCHOOL
+			var tpl=fs.readFileSync(PROJECT_HOME + path.sep + ".style", "utf-8");			
+			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+			
+			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+			tpl = tpl.replace(/{ICON}/g, 'data:image/png;base64,'+b64(PROJECT_HOME+path.sep+"src"+path.sep+"Contents"+path.sep+"Resources"+path.sep+"startup"+path.sep+"logo.png"));
+			
+			var link = require('sqwish').minify(tpl);
+			
+			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + '.template', 'utf-8');
+			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
+			
+			if (ocfg.current["publish.host"]) __CLUSTER__="var __CLUSTER__=\""+ocfg.current["publish.host"]+"\";"; else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
+			
+			if (process.argv.indexOf("unsafe") > -1) tpl=tpl.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
+			
+			tpl=tpl.replace('<head>','<head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">');
+			
+			var favicon = "<script>"+__CLUSTER__+"</script>";
+			
+			var launcher = fs.readFileSync(__dirname+path.sep+'tpl'+path.sep+'oa'+path.sep+'bootstrap_mobi.tpl');
+
+			tpl = tpl.replace('</head>','<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
+			
+			tpl = tpl.replace('</body>',favicon+launcher+'</body>');
+			var minify = require('html-minifier').minify;
+			var min=minify(tpl.replace(/\t/g,'').replace(/\n/g,''));
+			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min);
+			make_res();
+		}
 
     };
 
@@ -3491,7 +3531,8 @@ function res_html_compile() {
 			tpl = tpl.replace('</head>','<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
 			tpl = tpl.replace('</body>',favicon+launcher+'</body>');
 			var minify = require('html-minifier').minify;
-			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", minify(tpl));
+			var min=minify(tpl.replace(/\t/g,'').replace(/\n/g,''));
+			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min);
 			make_res();
 		};			
 	}
