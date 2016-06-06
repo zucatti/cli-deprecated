@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8k";
+$_VERSION = "0.9.8ka";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -2888,7 +2888,7 @@ function make_final(err, result) {
     console.log('');
 
     if (PROCESS_NATIVE) build_native();
-    if (PROCESS_PRODUCTION) build_production();
+    if (PROCESS_PRODUCTION!=-1) build_production();
 };
 
 function build_native() {
@@ -4110,9 +4110,11 @@ function build_production() {
                     shelljs.cp(PROJECT_HOME + path.sep + 'src' + path.sep + 'Contents' + path.sep + 'Auth' + path.sep + 'Profiler.json', _cdir + path.sep + 'auth' + path.sep + 'Profiler.json');
 				
 				// creating aliases (if any)
-				if (MSettings.remote.alias) {
-					var alias=MSettings.remote.alias.join(' ');
-					fs.writeFileSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace+path.sep+'.alias',alias);
+				if (MSettings.remote) {
+					if (MSettings.remote.alias) {
+						var alias=MSettings.remote.alias.join(' ');
+						fs.writeFileSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace+path.sep+'.alias',alias);
+					};
 				};
 
                 // creating package
