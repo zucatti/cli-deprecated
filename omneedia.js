@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8ka";
+$_VERSION = "0.9.8l";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -2080,6 +2080,12 @@ function download(o, callback) {
             delete(_JSON.PLUGINS);
             delete(_JSON.SIGN);
             _JSON.DEBUG = false;
+			if (ocfg.current["publish.host"]) {
+				var publish_host=ocfg.current["publish.host"];
+				if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
+				_JSON.CLUSTER=publish_host;
+			} else _JSON.CLUSTER="http://cluster.omneedia.com";
+            
             var text = "Settings=" + JSON.stringify(_JSON)+';var __SOCKET__=';
         };
         callback(null, text);
@@ -3451,25 +3457,16 @@ function res_html_compile() {
 			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
 			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
 			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
-			
-			if (ocfg.current["publish.host"]) {
-				var publish_host=ocfg.current["publish.host"];
-				if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
-				publish_host+=':'+port;
-				__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
-			} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
-						
+									
 			if (process.argv.indexOf("unsafe") > -1) tpl=tpl.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
 			
 			tpl=tpl.replace('<head>','<head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">');
-			
-			var favicon = "<script>"+__CLUSTER__+"</script>";
-			
+						
 			var launcher = fs.readFileSync(__dirname+path.sep+'tpl'+path.sep+'oa'+path.sep+'bootstrap_mobi.tpl');
 
 			tpl = tpl.replace('</head>','<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
 			
-			tpl = tpl.replace('</body>',favicon+launcher+'</body>');
+			tpl = tpl.replace('</body>',launcher+'</body>');
 			var minify = require('html-minifier').minify;
 			var min=minify(tpl.replace(/\t/g,'').replace(/\n/g,''));
 			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min);
@@ -3503,14 +3500,7 @@ function res_html_compile() {
 						var favicon = "<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
 						var body = html.split('<body ')[1].split('<script src="http://cdn.omneedia.com/public/requirejs/require.js"')[0].replace(/\s{2,}/g, '');
 						
-						if (ocfg.current["publish.host"]) {
-							var publish_host=ocfg.current["publish.host"];
-							if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
-							publish_host+=':'+port;
-							__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
-						} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
-
-						var launcher = "<script>"+__CLUSTER__+"window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
+						var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
 						var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style></head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + favicon + launcher + '</body></html>';
 						var html = html.replace(/>>/g, '>');
 						fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", html);
@@ -3538,14 +3528,8 @@ function res_html_compile() {
 			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
 			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
 
-			if (ocfg.current["publish.host"]) {
-				var publish_host=ocfg.current["publish.host"];
-				if (publish_host.indexOf('://')==-1) publish_host='http://';
-				publish_host+=':'+port;
-				__CLUSTER__="var __CLUSTER__=\""+publish_host+"\";";
-			} else __CLUSTER__="var __CLUSTER__=\"http://cluster.omneedia.com/\"";
 
-			var favicon = "<script>"+__CLUSTER__+";var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
+			var favicon = "<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
 			var launcher = fs.readFileSync(__dirname+path.sep+'tpl'+path.sep+'oa'+path.sep+'bootstrap_prod.tpl');
 			tpl = tpl.replace('</head>','<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
 			tpl = tpl.replace('</body>',favicon+launcher+'</body>');
@@ -4146,15 +4130,9 @@ function build_production() {
                         return;
                     };
                     console.log('  - Publishing drone v' + p[p.length - 1].split(require('path').sep)[0]);
-                    if (ocfg.current["publish.port"]) var port = ocfg.current["publish.port"];
-                    else var port = 9191;
 					var publish_host=ocfg.current["publish.host"];
 					if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
-					publish_host+=':'+port;
                     var req = request.post(publish_host + "/upload", function (err, resp, body) {
-                        console.log(err);
-                        console.log(resp);
-                        console.log(body);
                         if (err) {
                             console.log('  ! Publishing failed. Check your config'.yellow);
                         } else {
@@ -5670,7 +5648,6 @@ figlet(' omneedia', {
 			fs.writeFileSync(__dirname+path.sep+'brackets.cmd',cmd);
 			var spawn=require('child_process').spawn;
 			spawn(__dirname+path.sep+'brackets.cmd',[PROJECT_HOME],{detached: false});			
-			//exec(__dirname + path.sep + 'brackets' + path.sep + 'BracketsPortable', [PROJECT_HOME]);
 		}
     };
 
