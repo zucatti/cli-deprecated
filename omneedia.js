@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8l";
+$_VERSION = "0.9.8m";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -2080,11 +2080,6 @@ function download(o, callback) {
             delete(_JSON.PLUGINS);
             delete(_JSON.SIGN);
             _JSON.DEBUG = false;
-			if (ocfg.current["publish.host"]) {
-				var publish_host=ocfg.current["publish.host"];
-				if (publish_host.indexOf('://')==-1) publish_host='http://'+publish_host;
-				_JSON.CLUSTER=publish_host;
-			} else _JSON.CLUSTER="http://cluster.omneedia.com";
             
             var text = "Settings=" + JSON.stringify(_JSON)+';var __SOCKET__=';
         };
