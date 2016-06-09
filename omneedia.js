@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8m";
+$_VERSION = "0.9.8ma";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -1886,7 +1886,10 @@ if (fs.existsSync(__dirname + path.sep + '.config')) {
     if (ocfg.current) {
         if (ocfg.current.proxy) PROXY = ocfg.current.proxy;
     }
-} else var ocfg={current:{}};
+} else {
+	var ocfg={current:{}};
+	fs.writeFileSync(__dirname + path.sep + '.config',JSON.stringify(ocfg))
+}
 
 if (PROXY != "") var Request = request.defaults({
     'proxy': PROXY
@@ -5540,14 +5543,17 @@ figlet(' omneedia', {
 					, method: "post"
 					, encoding: null
 				}, function (err, resp, body) {
-					var response=JSON.parse(body.toString('utf-8'));
-					if (response.success) {
-						fs.writeFileSync(__dirname+path.sep+".login",response.pid);
-						console.log('\n  You have been successfully logged in...\n'.green);
-						console.log('');
-					} else {
-						console.log('\n  Login failed.\n'.yellow);	
-					};
+					console.log(err);
+					if (!err) {
+						var response=JSON.parse(body.toString('utf-8'));
+						if (response.success) {
+							fs.writeFileSync(__dirname+path.sep+".login",response.pid);
+							console.log('\n  You have been successfully logged in...\n'.green);
+							console.log('');
+						} else {
+							console.log('\n  Login failed.\n'.yellow);	
+						};
+					}
 				});					
 			});
 		});
