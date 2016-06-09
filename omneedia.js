@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8ma";
+$_VERSION = "0.9.8mb";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -6196,7 +6196,14 @@ figlet(' omneedia', {
         var SessionStore = require('session-file-store')(Session);
 		if (!fs.existsSync(__dirname+path.sep+'tmp')) fs.mkdirSync(__dirname+path.sep+'tmp');
 		if (!fs.existsSync(__dirname+path.sep+'tmp'+path.sep+'sessions')) fs.mkdirSync(__dirname+path.sep+'tmp'+path.sep+'sessions');
-		var session = Session({store: new SessionStore({path: __dirname+path.sep+'tmp'+path.sep+'sessions'}), secret: 'pass', resave: true, saveUninitialized: true});
+		
+		var session = Session({
+			store: new SessionStore({path: __dirname+path.sep+'tmp'+path.sep+'sessions'}), 
+			secret: 'pass', 
+			resave: true, 
+			saveUninitialized: true,
+			rolling: true
+		});
 
 		app.use(session);
 
