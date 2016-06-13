@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8mb";
+$_VERSION = "0.9.8n";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5241,7 +5241,10 @@ function App_Update(nn, cb) {
 		} else {
 			// NEW SCHOOL
 			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + '.template', 'utf-8');
-			var _bt = fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap.tpl', 'utf-8');
+			if (fs.existsSync(PROJECT_HOME + path.sep + '.bootstrap')) {
+				var _btt = fs.readFileSync(PROJECT_HOME + path.sep + '.bootstrap','utf-8').trim();
+				var _bt = fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap'+_btt+'.tpl', 'utf-8');
+			} else var _bt = fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap.tpl', 'utf-8');
 			var _favicon=fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'favicon.tpl', 'utf-8');
 			var _style = fs.readFileSync(PROJECT_HOME + path.sep + '.style','utf-8');
 			_style += '\t.omneedia-overlay{z-index: 9999999999;position:absolute;left:0px;top:0px;width:100%;height:100%;display:none;}\n';
@@ -6196,14 +6199,7 @@ figlet(' omneedia', {
         var SessionStore = require('session-file-store')(Session);
 		if (!fs.existsSync(__dirname+path.sep+'tmp')) fs.mkdirSync(__dirname+path.sep+'tmp');
 		if (!fs.existsSync(__dirname+path.sep+'tmp'+path.sep+'sessions')) fs.mkdirSync(__dirname+path.sep+'tmp'+path.sep+'sessions');
-		
-		var session = Session({
-			store: new SessionStore({path: __dirname+path.sep+'tmp'+path.sep+'sessions'}), 
-			secret: 'pass', 
-			resave: true, 
-			saveUninitialized: true,
-			rolling: true
-		});
+		var session = Session({store: new SessionStore({path: __dirname+path.sep+'tmp'+path.sep+'sessions'}), secret: 'pass', resave: true, saveUninitialized: true});
 
 		app.use(session);
 
@@ -6216,6 +6212,8 @@ figlet(' omneedia', {
             }))
 
         app.use("/src", express.static(PROJECT_HOME + path.sep + 'src' + path.sep));
+		app.use("/app", express.static(PROJECT_HOME + path.sep + 'src' + path.sep+ 'Contents' + path.sep+ 'Application'+ path.sep+ 'app' ));
+		app.use("/build", express.static(PROJECT_HOME + path.sep + 'src' + path.sep+ 'Contents' + path.sep+ 'Application'+ path.sep+ 'app' ));
 
         // MOBILE STUFF
 
