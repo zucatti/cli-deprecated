@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8n";
+$_VERSION = "0.9.8o";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -2239,7 +2239,20 @@ copyFileSync = function (srcFile, destFile) {
 
 function make_resources(cb) {
     console.log('  - Updating resources');
-
+	
+	if (fs.existsSync(PROJECT_HOME+path.sep+'src'+path.sep+'Contents'+path.sep+'Resources'+path.sep+'theme')) {
+		var dir=PROJECT_HOME+path.sep+'src'+path.sep+'Contents'+path.sep+'Application'+path.sep+'app'+path.sep+'pages';
+		dir=fs.readdirSync(dir);
+		var dd=['@import "../app.variables";'];
+		for (var i=0;i<dir.length;i++) {
+			if (dir[i].indexOf('.')!=0) {
+				if (fs.existsSync(PROJECT_HOME+path.sep+'src'+path.sep+'Contents'+path.sep+'Application'+path.sep+'app'+path.sep+'pages'+path.sep+dir[i]+path.sep+dir[i]+'.scss')) dd.push('@import "../../Application/app/pages/'+dir[i]+'/'+dir[i]+'";');
+			}
+		};
+		var filename=PROJECT_HOME+path.sep+'src'+path.sep+'Contents'+path.sep+'Resources'+path.sep+'theme'+path.sep+'app.core.scss';
+		fs.writeFileSync(filename,dd.join('\n'));
+	};
+	
     if (Manifest.platform == "mobile") {
         if (fs.existsSync(PROJECT_DEV + path.sep + "mobi" + path.sep + "Resources.css")) {
             cb();
@@ -6184,6 +6197,26 @@ figlet(' omneedia', {
 		app.upload=app.UPLOAD;
 
         app.use(require('cookie-parser')());
+		
+		app.get('/theme.css',function(req,res){
+			var sass = require('node-sass');
+			if (Manifest.frameworks.length>0) {
+				var thema=Manifest.frameworks[0].theme;
+			};
+			var _filename=PROJECT_HOME+path.sep+"src"+path.sep+"Contents"+path.sep+"Resources"+path.sep+"theme"+path.sep+"app."+thema+".scss";
+			if (fs.existsSync(_filename)) {
+				sass.render({
+					file: _filename
+				}, function(err, result) { 
+					if (err) {
+						res.end(JSON.stringify(err,null,4));
+						return;
+					};
+					res.writeHead(200, {'Content-Type': 'text/css'});
+					res.end(result.css.toString('utf-8'));
+				});
+			} else res.end('');
+		});
 
         if (process.argv.indexOf('--debug') > -1) app.use(require('morgan')('dev'));
         app.use(require('cors')());
@@ -6202,7 +6235,6 @@ figlet(' omneedia', {
 		var session = Session({store: new SessionStore({path: __dirname+path.sep+'tmp'+path.sep+'sessions'}), secret: 'pass', resave: true, saveUninitialized: true});
 
 		app.use(session);
-
 
         // init session
 
