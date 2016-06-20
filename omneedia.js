@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8o";
+$_VERSION = "0.9.8oa";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -4008,28 +4008,14 @@ function update_npm() {
         var npm = fs.readFileSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'package.json', 'utf-8');
         npm = JSON.parse(npm);
         var list = [];
-        for (var element in npm.dependencies) {
-            list.push(element);
-        };
+        for (var element in npm.dependencies) list.push(element);
         if (list.length > 0) {
-            console.log('  - Updating npm packages');
+            console.log('  - Updating packages');
             process.chdir(PROJECT_HOME + path.sep + 'bin');
-            for (var i = 0; i < list.length; i++) {
-                if (!fs.existsSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'node_modules' + path.sep + list[i])) {
-                    console.log('    - Downloading ' + list[i]);
-					if (process.args.sandbox)
-					    shelljs.exec(__dirname+path.sep+'nodejs'+path.sep+'bin'+path.sep+'npm install',{silent: true});
-					else
-					    shelljs.exec('npm install',{silent: true});
-                    console.log('      Done.');
-                };
-            };
-        };
-        // remove unnecessary packages
-        if (!fs.existsSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'node_modules')) fs.mkdirSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'node_modules');
-        var dir = fs.readdirSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'node_modules');
-        for (var i = 0; i < dir.length; i++) {
-            if (list.indexOf(dir[i]) == -1) glob.rmdirSyncRecursive(PROJECT_HOME + path.sep + 'bin' + path.sep + 'node_modules' + path.sep + dir[i]);
+			if (process.args.sandbox)
+				shelljs.exec(__dirname+path.sep+'nodejs'+path.sep+'bin'+path.sep+'npm install',{silent: true});
+			else
+				shelljs.exec('npm install',{silent: true});
         };
         process.chdir(PROJECT_HOME);
     };
