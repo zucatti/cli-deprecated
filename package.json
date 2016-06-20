@@ -1,12 +1,13 @@
 {
   "name": "bin.omneedia.framework",
-  "version": "0.9.8",
+  "version": "0.9.8o",
   "description": "Omneedia Framework",
   "main": "omneedia.js",
   "dependencies": {
     "db": "https://github.com/Omneedia/db/tarball/master",
     "api": "https://github.com/Omneedia/api/tarball/master",
-    "authom": "https://github.com/Omneedia/authom/tarball/master#commit",
+    "authom": "https://github.com/Omneedia/authom/tarball/master",
+	"unzip": "https://github.com/Omneedia/unzip/tarball/master",
 	"shelljs": "0.6.0",
 	"adm-zip": "0.4.7",
 	"async": "1.5.2",
@@ -43,12 +44,12 @@
 	"socket.io": "1.4.5",
 	"promptly": "1.1.0",
 	"morgan": "1.7.0",
-	"node-schedule": "1.1.0",
-	"unzip": "https://github.com/Omneedia/unzip/tarball/master",
+	"node-schedule": "1.1.0",	
 	"uglify-js": "2.6.2",
 	"wrench": "1.5.9",
 	"xml2js": "0.4.16",
-	"sqwish": "0.2.2"	
+	"sqwish": "0.2.2",
+	"none-sass": "3.8.0"
   },
   "devDependencies": {},
   "scripts": {
