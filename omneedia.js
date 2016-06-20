@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8oa";
+$_VERSION = "0.9.8ob";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -4008,7 +4008,9 @@ function update_npm() {
         var npm = fs.readFileSync(PROJECT_HOME + path.sep + 'bin' + path.sep + 'package.json', 'utf-8');
         npm = JSON.parse(npm);
         var list = [];
-        for (var element in npm.dependencies) list.push(element);
+        for (var element in npm.dependencies) {
+			if (!fs.existsSync(PROJECT_HOME + path.sep + 'bin'+path.sep+'node_modules'+path.sep+element)) list.push(element);
+		};
         if (list.length > 0) {
             console.log('  - Updating packages');
             process.chdir(PROJECT_HOME + path.sep + 'bin');
@@ -4016,8 +4018,9 @@ function update_npm() {
 				shelljs.exec(__dirname+path.sep+'nodejs'+path.sep+'bin'+path.sep+'npm install',{silent: true});
 			else
 				shelljs.exec('npm install',{silent: true});
+			process.chdir(PROJECT_HOME);				
         };
-        process.chdir(PROJECT_HOME);
+        
     };
 };
 
