@@ -49,7 +49,7 @@
 	"wrench": "1.5.9",
 	"xml2js": "0.4.16",
 	"sqwish": "0.2.2",
-	"none-sass": "3.8.0"
+	"node-sass": "3.8.0"
   },
   "devDependencies": {},
   "scripts": {
