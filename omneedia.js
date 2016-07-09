@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8ob";
+$_VERSION = "0.9.8oc";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5106,11 +5106,13 @@ function App_Update(nn, cb) {
                     for (var zz = 0; zz < m.src.length; zz++) {
                         var src = m.src[zz].replace(/{version}/g, m.version);
                         src = src.replace(/{theme}/g, m.theme);
+						src = src.replace(/{style}/g, m.style);
                         frameworks.push(src);
                     }
                 } else {
                     var src = m.src.replace(/{version}/g, m.version);
                     src = src.replace(/{theme}/g, m.theme);
+					src = src.replace(/{style}/g, m.style);
                     frameworks.push(src);
                 }
             };
@@ -5119,11 +5121,13 @@ function App_Update(nn, cb) {
                     for (var zz = 0; zz < m.res.length; zz++) {
                         var res = m.res[zz].replace(/{version}/g, m.version);
                         res = res.replace(/{theme}/g, m.theme);
+						res = res.replace(/{style}/g, m.style);
                         resources.push(res);
                     }
                 } else {
                     var res = m.res.replace(/{version}/g, m.version);
                     res = res.replace(/{theme}/g, m.theme);
+					res = res.replace(/{style}/g, m.style);
                     resources.push(res);
                 }
             };
