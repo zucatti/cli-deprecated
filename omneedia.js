@@ -4,7 +4,7 @@
  *
  */
 
-$_VERSION = "0.9.8oc";
+$_VERSION = "0.9.8p";
 
 CDN = "http://cdn.omneedia.com/"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -5947,15 +5947,15 @@ figlet(' omneedia', {
                 var x = require(PROJECT_WEB + path.sep + "Contents" + path.sep + "Services" + path.sep + api.action + ".js");
                 x.temp = function (ext) {
                     var uid = Math.uuid();
-                    var dir = PROJECT_HOME + path.sep + "tmp" + path.sep;
+                    var dir = __dirname + path.sep + "tmp" + path.sep+"tempfiles";
                     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
                     var filename = uid;
                     if (ext) filename += "." + ext;
                     return {
                         uid: uid
                         , filename: filename
-                        , directory: PROJECT_HOME + path.sep + "tmp"
-                        , path: PROJECT_HOME + path.sep + "tmp" + path.sep + filename
+                        , dir: dir
+                        , path: dir + path.sep + filename
                         , url: "/tmp/" + filename
                     };
                 };
@@ -6508,19 +6508,20 @@ figlet(' omneedia', {
         });
 
         app.get('/tmp/:uid', function (req, res) {
-            var file = PROJECT_HOME + path.sep + "tmp" + path.sep + req.params.uid;
+			if (!fs.existsSync(__dirname + path.sep + "tmp"+ path.sep + "tempfiles")) fs.mkdirSync(__dirname + path.sep + "tmp"+path.sep + "tempfiles");
+            var file = __dirname + path.sep + "tmp" + path.sep + "tempfiles" + path.sep + req.params.uid;
+			//console.log(file);
             if (!fs.existsSync(file)) {
                 res.sendStatus(404);
             } else {
                 res.download(file);
                 res.on('finish', function () {
-                    fs.unlink(file);
+                    //fs.unlink(file);
                 });
             }
         });
 
         app.post('/api', processRoute);
-
 
         app.get('/session', function (req, res) {
             res.header("Content-Type", "application/json; charset=utf-8");
@@ -6945,6 +6946,20 @@ figlet(' omneedia', {
                         }
                     }
                 };
+                _App.temp = function (ext) {
+                    var uid = Math.uuid();
+                    var dir = __dirname + path.sep + "tmp" + path.sep+"tempfiles";
+                    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+                    var filename = uid;
+                    if (ext) filename += "." + ext;
+                    return {
+                        uid: uid
+                        , filename: filename
+                        , dir: dir
+                        , path: dir + path.sep + filename
+                        , url: "/tmp/" + filename
+                    };
+                };				
                 _App.api = require(__dirname + path.sep + 'node_modules' + path.sep + "api");
                 for (var i = 0; i < Settings.API.length; i++) {
                     if (Settings.API[i] == "__QUERY__")
