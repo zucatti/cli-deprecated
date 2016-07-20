@@ -4,10 +4,10 @@
  *
  */
 
-$_VERSION = "0.9.8p";
+$_VERSION = "0.9.8od";
 
-CDN = "http://cdn.omneedia.com/"; //PROD
-//CDN = "/cdn"; // DEBUG
+//CDN = "http://cdn.omneedia.com/"; //PROD
+CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
@@ -5058,13 +5058,14 @@ function App_Update(nn, cb) {
 
         // updating manifest
         manifest.namespace = PACKAGE_NAME;
-        if (manifest.title == "App") manifest.title = PACKAGE_NAME;
-        if (manifest.description == "Template") manifest.description = "Package description goes here";
+		manifest.title=manifest.title.replace('{TITLE}',PACKAGE_NAME);
+		manifest.description=manifest.description.replace('{DESCRIPTION}',"Package description goes here");
         var uniqueid = require('node-uuid');
-        if (manifest.uid == "e4182ba0-d423-11e3-9c1a-0800200c9a66") manifest.uid = uniqueid.v4();
+        manifest.uid = manifest.uid.replace('{UID}',uniqueid.v4());
         var date = new Date();
         var year = date.getFullYear();
-        if (manifest.copyright == "XXX") manifest.copyright = 'Copyright (c) ' + year + ' By ' + PACKAGE_COMPANY;
+        manifest.copyright = manifest.copyright.replace('{COPYRIGHT}','Copyright (c) ' + year + ' By ' + PACKAGE_COMPANY);
+		
         // saving manifest
         fs.writeFileSync(PROJECT_HOME + path.sep + 'app.manifest', JSON.stringify(manifest, null, 4));
 
@@ -6217,8 +6218,8 @@ figlet(' omneedia', {
         app.use(require('compression')());
         app.use(express.static(PROJECT_WEB));
 
-        if (fs.existsSync(__dirname + path.sep + ".." + path.sep + "omneedia.github.io" + path.sep + "cdn"))
-            app.use('/cdn', express.static(__dirname + path.sep + ".." + path.sep + "omneedia.github.io" + path.sep + "cdn"));
+        if (fs.existsSync(__dirname + path.sep + ".." + path.sep + "omneedia.github.io" ))
+            app.use('/cdn', express.static(__dirname + path.sep + ".." + path.sep + "omneedia.github.io" ));
 
         var Session = require('express-session');
 
