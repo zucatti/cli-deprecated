@@ -4,10 +4,10 @@
  *
  */
 
-$_VERSION = "0.9.8od";
+$_VERSION = "0.9.8pi";
 
-//CDN = "http://cdn.omneedia.com/"; //PROD
-CDN = "/cdn"; // DEBUG
+CDN = "http://cdn.omneedia.com"; //PROD
+//CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
@@ -5137,29 +5137,54 @@ function App_Update(nn, cb) {
         Settings.RESOURCES = resources;
         if (manifest.platform == "desktop") {
             Settings.RESOURCES.push(CDN + "/omneedia/res/webapp.css");
-            Settings.RESOURCES.push(CDN + "/ext/res/ux.css");
+			// old way to manipulate css ux
+			// ** deprecated
+            //Settings.RESOURCES.push(CDN + "/ext/res/ux.css");
             Settings.RESOURCES.push("Contents/Resources/webapp.css");
         };
         if (manifest.platform == "mobile") {
             Settings.RESOURCES.push(CDN + "/omneedia/res/mobi.css");
             Settings.RESOURCES.push("Contents/Resources/mobi.css");
         };
+
         if (manifest.libraries)
             Settings.LIBRARIES = manifest.libraries;
         else
             Settings.LIBRARIES = [];
         // we load omneedia.modules
         var SETMODULES = JSON.parse(require('fs').readFileSync(__dirname + require('path').sep + 'omneedia.modules', 'utf-8'));
-
+		
+		for (var i=0;i<Manifest.frameworks.length;i++) {
+			if (Manifest.frameworks[i].name=="EXTJS") {
+				var _framework_version=Manifest.frameworks[i].version.split('.')[0]+'.x';
+				var _framework_theme=Manifest.frameworks[i].theme;
+			}
+		};
+		
         Settings.PATHS = {
             "Contents": "Contents/Application/app"
             , "Culture": "Contents/Culture"
             , "omneedia": CDN + "/omneedia"
-            , "Ext.ux": CDN + "/ext/ux"
-            , "Ext.plugin": CDN + "/ext/plugin"
-            , "Ext.util": CDN + "/ext/util"
+            , "Ext.ux": CDN + "/ext/ux/"+_framework_version
+            , "Ext.plugin": CDN + "/ext/plugin/"+_framework_version
+            , "Ext.util": CDN + "/ext/util/"+_framework_version
 			, "Lib": "Contents/Application/app/libraries"
         };
+		
+		// new way to manipulate css ux
+		for (var i=0;i<Manifest.modules.length;i++) {
+			var module=Manifest.modules[i];
+			//get directory of module
+			for (var el in Settings.PATHS) {
+				if (module.indexOf(el)>-1) var dir_module=Settings.PATHS[el]+'/'+module+'/';
+			};
+			if (dir_module) {
+				dir_module=dir_module.replace('/ux/','/res/')+_framework_theme+'.css';
+				Settings.RESOURCES.push(dir_module);
+			};
+			
+		};
+			
         Settings.CONTROLLERS = [];
         for (var i = 0; i < manifest.controllers.length; i++) Settings.CONTROLLERS.push(manifest.controllers[i]);
         Settings.MODULES = SETMODULES['*'];
@@ -6191,6 +6216,10 @@ figlet(' omneedia', {
 		app.upload=app.UPLOAD;
 
         app.use(require('cookie-parser')());
+		
+		/*app.get('/Ext.ux.Scheduler2.model.TimeAxisTick',function(req,res){
+			res.end('Ext.define("Ext.ux.Scheduler2.model.TimeAxisTick",{extend: Ext.ux.Scheduler2.model.Range,startDateField: "start",endDateField: "end"});');
+		});*/
 		
 		app.get('/theme.css',function(req,res){
 			var sass = require('node-sass');
