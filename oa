@@ -1,2 +1,23 @@
-ABSPATH=$(cd "$(dirname "$0")"; pwd)
-node $ABSPATH/omneedia.js $*
+
+case "$(uname -s)" in
+
+   Darwin)
+    ABSPATH=$(cd "$(dirname "$0")"; pwd)
+    node $ABSPATH/omneedia.js $*
+     ;;
+
+   Linux)
+      ABSPATH=$(cd "$(dirname "$0")"; pwd)
+      $ABSPATH/nodejs/bin/node $ABSPATH/omneedia.js $*
+
+     ;;
+
+   CYGWIN*|MINGW32*|MSYS*)
+     echo 'MS Windows'
+     ;;
+
+
+   *)
+     echo 'other OS'
+     ;;
+esac
