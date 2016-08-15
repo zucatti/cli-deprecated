@@ -4,10 +4,10 @@
  *
  */
 
-$_VERSION = "0.9.8pi";
+$_VERSION = "0.9.8q";
 
-CDN = "http://cdn.omneedia.com"; //PROD
-//CDN = "/cdn"; // DEBUG
+//CDN = "http://cdn.omneedia.com"; //PROD
+CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
@@ -1686,7 +1686,7 @@ var http = require('http');
 var UglifyJS = require("uglify-js");
 var async = require('async');
 var htmlparser = require("htmlparser2");
-var authom = require("authom");
+
 var request = require('request');
 var XML2JS = require('xml2js');
 
@@ -1896,6 +1896,10 @@ if (PROXY != "") var Request = request.defaults({
 });
 else var Request = request;
 
+GLOBAL.Request=Request;
+
+var authom = require("authom");
+
 var uuid = require('node-uuid');
 var os = require('os');
 
@@ -1940,6 +1944,8 @@ Auth = {
         if (profile.provider == "cas") var typ = "cas";
         if (profile.provider == "twitter") var typ = "twitter";
         if (profile.provider == "facebook") var typ = "facebook";
+		if (profile.provider == "omneedia") var typ = "omneedia";
+		
         Auth.login(profile, typ, function (response) {
             console.log(response);
             fn(null, response);
@@ -5561,24 +5567,30 @@ figlet(' omneedia', {
         return;
     };
 	
+	// login dev
+	
 	if (argv.indexOf('login')>-1) {
-		if (fs.existsSync(__dirname+path.sep+'.login')) {console.log('  You are already logged in.\n'.yellow);return;}
-		var sandbox="http://sandbox.omneedia.com/login";
+		if (fs.existsSync(__dirname+path.sep+'.login')) {
+			console.log('  You are already logged in.\n'.yellow);
+			return;
+		};
+		var sandbox="http://auth.omneedia.com/login";
 		
-		if (ocfg.current['deploy.host']) var sandbox="http://"+ocfg.current['deploy.host']+"/login";	
+		if (ocfg.current['deploy.host']) var sandbox=ocfg.current['deploy.host']+"/login";	
 		var promptly=require('promptly');
 		promptly.prompt('User ID: ', function (err, UserID) {
 			promptly.password('Password: ', function (err, Pass) {
+				var crypto = require('crypto'), shasum = crypto.createHash('sha512');
+				shasum.update(Pass);				
 				Request({
 					url: sandbox
 					, form: {
-						login: UserID,
-						password: Pass
+						l: UserID,
+						p: shasum.digest('hex')
 					}
 					, method: "post"
 					, encoding: null
 				}, function (err, resp, body) {
-					console.log(err);
 					if (!err) {
 						var response=JSON.parse(body.toString('utf-8'));
 						if (response.success) {
@@ -6160,7 +6172,7 @@ figlet(' omneedia', {
 				console.log(str.yellow);
 				return;
 			}
-		}
+		};
 
 		if (process.args.sandbox) {
 			console.log = (function () {
@@ -6194,6 +6206,7 @@ figlet(' omneedia', {
             limit: '5000mb'
             , extended: true
         }));
+		
         app.use(bodyParser.urlencoded({
             limit: '5000mb'
             , extended: true
@@ -6216,10 +6229,6 @@ figlet(' omneedia', {
 		app.upload=app.UPLOAD;
 
         app.use(require('cookie-parser')());
-		
-		/*app.get('/Ext.ux.Scheduler2.model.TimeAxisTick',function(req,res){
-			res.end('Ext.define("Ext.ux.Scheduler2.model.TimeAxisTick",{extend: Ext.ux.Scheduler2.model.Range,startDateField: "start",endDateField: "end"});');
-		});*/
 		
 		app.get('/theme.css',function(req,res){
 			var sass = require('node-sass');
@@ -6400,9 +6409,12 @@ figlet(' omneedia', {
             });
             app.get('/logout', function (req, res) {
                 var authType = req.session.authType;
+				if (req.session.user.service=="omneedia") var sid=req.session.user.uid;
+				var url=MSettings.auth[authType.toLowerCase()].logout;
+				if (sid) url+="?pid="+sid;
                 req.session.destroy();
 				try {
-					res.redirect(MSettings.auth[authType.toLowerCase()].logout);
+					res.redirect(url);
 				}catch(e) {
 					res.end('ERROR: authType');
 				}
@@ -6440,10 +6452,18 @@ figlet(' omneedia', {
 
             function ensureAuthenticated(req, res, next) {
 
-                if (MSettings.auth.cas) req.session.authType = "CAS";
+				var sandbox="http://auth.omneedia.com/login";
+				if (ocfg.current['deploy.host']) var sandbox=ocfg.current['deploy.host']+"/login";	
+
+				if (MSettings.auth.cas) req.session.authType = "CAS";
                 if (MSettings.auth.google) req.session.authType = "GOOGLE";
                 if (MSettings.auth.twitter) req.session.authType = "TWITTER";
                 if (MSettings.auth.facebook) req.session.authType = "FACEBOOK";
+				if (MSettings.auth.omneedia) {					
+					req.session.authType = "OMNEEDIA";
+					req.session.host = sandbox;
+				};
+				
                 if (!req.user) req.user = req.session.user;
                 if (req.user) {
                     return next();
@@ -6451,9 +6471,6 @@ figlet(' omneedia', {
                 res.redirect('/login');
             };
 
-            if (MSettings.auth.local) {
-                // a développer !
-            };
 
             if (MSettings.auth.cas) {
 
@@ -6462,7 +6479,15 @@ figlet(' omneedia', {
                 });
 
             };
+            
+			if (MSettings.auth.omneedia) {
 
+                authom.createServer({
+                    service: "omneedia"
+                });
+
+            };
+			
             if (MSettings.auth.google) {
 
                 var google = MSettings.auth.google;
@@ -6498,7 +6523,7 @@ figlet(' omneedia', {
             };
 
             authom.on("auth", function (req, res, data) {
-                console.log(data);
+
                 if (data.service == "google") {
                     var profile = {};
                     profile.username = data.data;
@@ -6509,7 +6534,7 @@ figlet(' omneedia', {
                         res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
                     });
                 };
-                if (data.service == "cas") {
+				if (data.service == "cas") {
                     var profile = {};
                     profile.provider = "cas";
                     profile.username = data.username;
@@ -6519,7 +6544,15 @@ figlet(' omneedia', {
                         res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
                     });
                 };
-
+				if (data.service == "omneedia") {
+                    var profile = {};
+                    profile.provider = "omneedia";
+                    profile.pid = data.uid;
+					var response=data;
+					req.session.user = response;
+					OASocketonAuth(JSON.stringify(response));
+					res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
+                };
             });
 
             authom.on("error", function (req, res, data) {
