@@ -1,9 +1,9 @@
 {
-  "name": "bin.omneedia.framework",
-  "version": "0.9.8o",
-  "description": "Omneedia Framework",
-  "main": "omneedia.js",
-  "dependencies": {
+    "name": "bin.omneedia.framework",
+    "version": "0.9.8o",
+    "description": "Omneedia Framework",
+    "main": "omneedia.js",
+    "dependencies": {
     "db": "https://github.com/Omneedia/db.git#master",
     "api": "https://github.com/Omneedia/api.git#master",
     "authom": "https://github.com/Omneedia/authom.git#master",
@@ -49,7 +49,8 @@
 	"wrench": "1.5.9",
 	"xml2js": "0.4.16",
 	"sqwish": "0.2.2",
-	"node-sass": "3.8.0"
+	"node-sass": "3.8.0",
+	"node-native-zip": "1.1.0"
   },
   "devDependencies": {},
   "scripts": {
