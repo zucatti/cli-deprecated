@@ -1,10 +1,10 @@
 /*
  *
- * OMNEEDIA Builder
+ * OMNEEDIA CLI
  *
  */
 
-$_VERSION = "0.9.8pi";
+$_VERSION = "0.9.8q";
 
 CDN = "http://cdn.omneedia.com"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -1676,7 +1676,7 @@ if (isWin) {
     if (!fs.existsSync(__dirname + path.sep + '.home' + path.sep + 'AppData')) fs.mkdirSync(__dirname + path.sep + '.home' + path.sep + 'AppData');
     if (!fs.existsSync(__dirname + path.sep + '.home' + path.sep + 'AppData' + path.sep + 'Local')) fs.mkdirSync(__dirname + path.sep + '.home' + path.sep + 'AppData' + path.sep + 'Local');
 };
-var zip = require('adm-zip');
+var zip = require('node-native-zip');
 var unzip = require('unzip');
 var Exec = require('child_process').exec;
 var util = require('util');
@@ -1686,7 +1686,7 @@ var http = require('http');
 var UglifyJS = require("uglify-js");
 var async = require('async');
 var htmlparser = require("htmlparser2");
-var authom = require("authom");
+
 var request = require('request');
 var XML2JS = require('xml2js');
 
@@ -1896,6 +1896,10 @@ if (PROXY != "") var Request = request.defaults({
 });
 else var Request = request;
 
+global.Request=Request;
+
+var authom = require("authom");
+
 var uuid = require('node-uuid');
 var os = require('os');
 
@@ -1940,6 +1944,8 @@ Auth = {
         if (profile.provider == "cas") var typ = "cas";
         if (profile.provider == "twitter") var typ = "twitter";
         if (profile.provider == "facebook") var typ = "facebook";
+		if (profile.provider == "omneedia") var typ = "omneedia";
+		
         Auth.login(profile, typ, function (response) {
             console.log(response);
             fn(null, response);
@@ -3381,7 +3387,7 @@ function build_native() {
                 if (!fs.existsSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'native')) fs.mkdirSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'native');
                 if (!fs.existsSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'native' + path.sep + 'android')) fs.mkdirSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'native' + path.sep + 'android');
                 fs.mkdirSync(PROJECT_HOME + path.sep + 'builds' + path.sep + 'native' + path.sep + 'android' + path.sep + Manifest.version + '.' + Manifest.build);
-                shelljs.cp(PROJECT_HOME + path.sep + 'dev' + path.sep + 'native' + path.sep + 'platforms' + path.sep + 'android' + path.sep + 'ant-build' + path.sep + '*-debug.apk', PROJECT_HOME + path.sep + 'builds' + path.sep + 'native' + path.sep + 'android' + path.sep + Manifest.version + '.' + Manifest.build);
+                shelljs.cp(PROJECT_HOME + path.sep + 'dev' + path.sep + 'native' + path.sep + 'platforms' + path.sep + 'android' + path.sep + 'build' +path.sep+'outputs'+path.sep+'apk'+ path.sep + '*-debug.apk', PROJECT_HOME + path.sep + 'builds' + path.sep + 'native' + path.sep + 'android' + path.sep + Manifest.version + '.' + Manifest.build);
                 console.log('    Done.');
             }
 
@@ -3438,7 +3444,7 @@ function res_html_compile() {
 						var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
 						//var launcher='<script src="Contents/Application.js"></script>';
 						if (process.argv.indexOf("unsafe") > -1)
-							var html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'"><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
+							var html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src * data:; img-src \'self\' data:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'"><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
 						else
 							var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
 						var html = html.replace(/>>/g, '>');
@@ -3469,7 +3475,7 @@ function res_html_compile() {
 			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
 			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
 									
-			if (process.argv.indexOf("unsafe") > -1) tpl=tpl.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="default-src *; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
+			if (process.argv.indexOf("unsafe") > -1) tpl=tpl.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="img-src: \'self\' data:;default-src * data:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
 			
 			tpl=tpl.replace('<head>','<head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">');
 						
@@ -4025,6 +4031,17 @@ function update_npm() {
 };
 
 function build_production() {
+	var walk = function(dir) {
+		var results = []
+		var list = fs.readdirSync(dir)
+		list.forEach(function(file) {
+			file = dir + '/' + file
+			var stat = fs.statSync(file)
+			if (stat && stat.isDirectory()) results = results.concat(walk(file))
+			else results.push(file)
+		})
+		return results
+	};	
     console.log('  - Downloading worker API');
     Request('https://github.com/Omneedia/tpl.omneedia.production/archive/master.zip').on('end', function () {
         console.log('  - Expanding production template');
@@ -4104,19 +4121,41 @@ function build_production() {
                 // creating package
                 console.log('  - Creating drone');
 
-                shelljs.exec('7z a "' + PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace + '.drone" "' + PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace + '"', {
+			
+			
+			var azip = new zip();
+			var files=walk(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace);
+			
+			var Files=[];
+			console.log(files);
+			for (var i=0;i<files.length;i++) Files.push({
+				name: files[i].split('production'+path.sep)[1], path: files[i]
+			});
+			console.log(Files);
+			
+			azip.addFiles(Files, function (err) {
+        		if (err) return console.log("ERR: unable to publish", err);
+        		var buff = azip.toBuffer();
+				fs.writeFile(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace + '.drone', buff, function () {
+					// deleting temp files
+					console.log('  - Deleting temp files');
+					shelljs.rm('-rf', PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace);				
+				});
+			});
+			
+			
+			
+			
+                /*shelljs.exec('7z a "' + PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace + '.drone" "' + PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace + '"', {
                     silent: true
-                });
+                });*/
 
-                // deleting temp files
-                console.log('  - Deleting temp files');
-                shelljs.rm('-rf', PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + Manifest.version + '.' + Manifest.build + path.sep + Manifest.namespace);
 
                 /*
                 Publishing it
                 */
 
-                if (argv.indexOf('publish') > -1) {
+                /*if (argv.indexOf('publish') > -1) {
 				
 					// OLD SCHOOL
 					
@@ -4143,7 +4182,7 @@ function build_production() {
                     form.append('file', fs.createReadStream(PROJECT_HOME + path.sep + 'builds' + path.sep + 'production' + path.sep + p[p.length - 1]));
 					
                     return;
-                };
+                };*/
 
 
                 console.log('    Done. ');
@@ -4283,6 +4322,119 @@ function do_push() {
 					},3000);
 				}			
 			});
+		}
+	} else console.log("  You are not logged in. Sorry!".yellow);
+	
+};
+
+function do_publish() {
+
+	var walk = function(dir) {
+		var results = []
+		var list = fs.readdirSync(dir)
+		list.forEach(function(file) {
+			file = dir + '/' + file
+			var stat = fs.statSync(file)
+			if (stat && stat.isDirectory()) results = results.concat(walk(file))
+			else results.push(file)
+		})
+		return results
+	}
+	
+	var PACKAGE_NAME=PROJECT_HOME.split(path.sep)[PROJECT_HOME.split(path.sep).length-1];
+	var PACKAGE_COMPANY=PACKAGE_NAME.split(".")[PACKAGE_NAME.split(".").length-2].toUpperCase();	
+	if (fs.existsSync(__dirname+path.sep+'.login','utf-8')) var __PID=fs.readFileSync(__dirname+path.sep+'.login','utf-8');
+
+	if (__PID) {
+		if (__PID=="") console.log("  You are not logged in. Sorry!".yellow); else {
+			console.log("  Deploying package "+PACKAGE_NAME.cyan);
+			console.log("");	
+
+			if (!fs.existsSync('.tmp')) fs.mkdirSync('.tmp'); else {
+				shelljs.rm('-Rf','.tmp');	
+				fs.mkdirSync('.tmp');
+			};
+			shelljs.cp('app.manifest','.tmp'+path.sep+"app.manifest");
+			shelljs.cp('app.png','.tmp'+path.sep+"app.png");
+			shelljs.cp('README.md','.tmp'+path.sep+"README.md");
+			shelljs.cp('.gitignore','.tmp'+path.sep+".gitignore");	
+			shelljs.cp('.style','.tmp'+path.sep+".style");	
+			shelljs.cp('.template','.tmp'+path.sep+".template");	
+			shelljs.cp('-R','src','.tmp');
+			var uniqueid = require('node-uuid');
+			var unik = uniqueid.v4();	
+			
+			var azip = new zip();
+			var files=walk('.tmp');
+			
+			var Files=[];
+			for (var i=0;i<files.length;i++) Files.push({
+				name: files[i].split('.tmp'+path.sep)[1], path: files[i]
+			});
+			
+			azip.addFiles(Files, function (err) {
+        		if (err) return console.log("ERR: unable to publish", err);
+        		var buff = azip.toBuffer();
+				fs.writeFile(unik+'.snapshot', buff, function () {
+            		shelljs.rm('-Rf','.tmp');
+					var deploy_host="http://deploy.omneedia.com/publish";
+					if (ocfg.current['deploy.host']) var deploy_host=ocfg.current['deploy.host']+"/publish";
+				
+					Request({
+						url: deploy_host
+						, formData: {
+							pid: __PID,
+							pkg: PACKAGE_NAME,
+							filename: unik+'.snapshot',
+							file: fs.createReadStream(unik+'.snapshot')
+						}
+						, method: "post"
+						, encoding: null
+					}, function (err, resp, body) {
+						if (fs.existsSync(unik+'.snapshot')) shelljs.rm(unik+'.snapshot');
+						if (!err) {
+							var r=JSON.parse(body.toString('utf-8'));
+							if (!r.result) {
+								if (r.msg=="ALREADY_UPLOADED") console.log('  ! ERR: This version has already been published.'.yellow)
+							} else {
+								console.log(r.result);
+								console.log('  Your project has been queued for building and you can manage it on your deploy-console.');
+							}
+						} else console.log("  ! ERR: unable to publish".yellow);
+					});
+        		});
+    		});
+						
+			/*Request({
+				url: sandbox.uri+'/sandbox'
+				, formData: {
+					pid: __PID,
+					pkg: PACKAGE_NAME,
+					uri: sandbox.repository,
+					file: fs.createReadStream('snapshot.'+unik)
+				}
+				, method: "post"
+				, encoding: null
+			}, function (err, resp, body) {		
+				if (fs.existsSync('snapshot.'+unik)) shelljs.rm('snapshot.'+unik);
+				if (err) {
+					console.log('  ! Deploying failed.'.yellow);
+				} else {
+					var b=JSON.parse(body.toString('utf-8'));
+					var manifest=PROJECT_HOME+path.sep+'app.manifest';
+					if (!fs.existsSync(manifest)) {
+						console.log('  ! Can\'t open manifest file.'.yellow);
+						return;
+					};
+					Manifest=JSON.parse(fs.readFileSync(manifest));		
+					if (Manifest.platform=="mobile") var mobi="/connect"; else var mobi="";
+					var texto='  Done. Your project is now online at: http://'+b.url+mobi;
+					console.log(texto.green);
+					setTimeout(function(){
+						open('http://' + b.url+mobi, 'chrome');
+					},3000);
+				}			
+			});*/
 		}
 	} else console.log("  You are not logged in. Sorry!".yellow);
 	
@@ -4588,12 +4740,14 @@ function AppUpdate(zzz) {
         return;
     };
     if (!zzz) zzz = '-';
-    try {
-        if (Manifest) {
-            shelljs.exec('git config user.name "'+Manifest.author.name+'"');
-            shelljs.exec('git config user.email "'+Manifest.author.mail+'"');
-        };
-    } catch(e) {}; 
+	if (fs.existsSync(PROJECT_HOME + require('path').sep +'.git')) {
+		try {
+			if (Manifest) {
+				shelljs.exec('git config user.name "'+Manifest.author.name+'"');
+				shelljs.exec('git config user.email "'+Manifest.author.mail+'"');
+			};
+		} catch(e) {}; 
+	};
     App_Update(zzz, function () {
         if (fs.existsSync(PROJECT_HOME + require('path').sep + 'etc' + require('path').sep + 'db.json'))
             var x = JSON.parse(fs.readFileSync(PROJECT_HOME + require('path').sep + 'etc' + require('path').sep + 'db.json'));
@@ -4673,7 +4827,9 @@ function AppUpdate(zzz) {
 		};
 
         var md5 = require('md5-file');
-        console.log('  - Checking remote project');
+        if (process.args.builder) return;
+		console.log('  - Checking remote project');
+		
         // test if content has changed
         var test0 = shelljs.exec('git diff-index --name-only HEAD', {
             silent: true
@@ -5005,6 +5161,20 @@ function App_Update(nn, cb) {
 		
 		Manifest=JSON.parse(fs.readFileSync(PROJECT_HOME+path.sep+"app.manifest",'utf-8'));
 	};
+    if (process.args.builder) {
+		if (!fs.existsSync(PROJECT_HOME+path.sep+"app.manifest")) PROJECT_HOME+=path.sep+process.args.app;
+		ROOT = path.dirname(PROJECT_HOME);
+        PROJECT_WEB = PROJECT_HOME + path.sep + "src";
+        PROJECT_API = PROJECT_WEB + path.sep + "Contents" + path.sep + "Services";
+        PROJECT_DEV = PROJECT_HOME + path.sep + "dev";
+        PROJECT_VAR = PROJECT_HOME + path.sep + "var";
+        PROJECT_SYSTEM = PROJECT_WEB + path.sep + "System";
+        PROJECT_BUILD = PROJECT_HOME + path.sep + "builds";
+        PROJECT_NS = ROOT.split(path.sep)[ROOT.split(path.sep).length - 1];
+		
+		Manifest=JSON.parse(fs.readFileSync(PROJECT_HOME+path.sep+"app.manifest",'utf-8'));
+	};	
+	
     // reading manifest.json
     var pcwd = process.cwd();
     if (nn == "-") pcwd += path.sep + argv[p + 1];
@@ -5026,13 +5196,20 @@ function App_Update(nn, cb) {
         Manifest = JSON.parse(fs.readFileSync(manifest));
     };
 
-    var manifest = PROJECT_HOME + path.sep + 'app.manifest';
-    var PACKAGE_NAME = PROJECT_HOME.split(path.sep)[PROJECT_HOME.split(path.sep).length - 1];
-    var PACKAGE_COMPANY = PACKAGE_NAME.split(".")[PACKAGE_NAME.split(".").length - 2].toUpperCase();
-    if (!fs.existsSync(manifest)) {
+	try {
+    	var manifest = PROJECT_HOME + path.sep + 'app.manifest';
+    	var PACKAGE_NAME = PROJECT_HOME.split(path.sep)[PROJECT_HOME.split(path.sep).length - 1];
+    	var PACKAGE_COMPANY = PACKAGE_NAME.split(".")[PACKAGE_NAME.split(".").length - 2].toUpperCase();
+	} catch (e) {
+		var PACKAGE_NAME = Manifest.namespace;
+		var PACKAGE_COMPANY= Manifest.namespace.split(".")[PACKAGE_NAME.split(".").length - 2].toUpperCase();
+	};
+    
+	if (!fs.existsSync(manifest)) {
         console.log('  ! Can\'t open manifest file.'.yellow);
         return;
     };
+	
     manifest = JSON.parse(fs.readFileSync(manifest));
 
     // get api
@@ -5561,25 +5738,32 @@ figlet(' omneedia', {
         return;
     };
 	
+	// login dev
+	
 	if (argv.indexOf('login')>-1) {
-		if (fs.existsSync(__dirname+path.sep+'.login')) {console.log('  You are already logged in.\n'.yellow);return;}
-		var sandbox="http://sandbox.omneedia.com/login";
+		if (fs.existsSync(__dirname+path.sep+'.login')) {
+			console.log('  You are already logged in.\n'.yellow);
+			return;
+		};
+		var sandbox="http://auth.omneedia.com/login";
 		
-		if (ocfg.current['deploy.host']) var sandbox="http://"+ocfg.current['deploy.host']+"/login";	
+		if (ocfg.current['deploy.host']) var sandbox=ocfg.current['deploy.host']+"/login";	
 		var promptly=require('promptly');
 		promptly.prompt('User ID: ', function (err, UserID) {
 			promptly.password('Password: ', function (err, Pass) {
+				var crypto = require('crypto'), shasum = crypto.createHash('sha512');
+				shasum.update(Pass);				
 				Request({
 					url: sandbox
 					, form: {
-						login: UserID,
-						password: Pass
+						l: UserID,
+						p: shasum.digest('hex')
 					}
 					, method: "post"
 					, encoding: null
 				}, function (err, resp, body) {
-					console.log(err);
 					if (!err) {
+						console.log(body.toString('utf-8'));
 						var response=JSON.parse(body.toString('utf-8'));
 						if (response.success) {
 							fs.writeFileSync(__dirname+path.sep+".login",response.pid);
@@ -5819,6 +6003,11 @@ figlet(' omneedia', {
 		return;
 	};
 	
+	if (argv.indexOf('publish')>-1) {
+		do_publish();
+		return;
+	};
+		
     if (argv.indexOf('clean') > -1) {
         if (require('fs').existsSync(PROJECT_HOME + path.sep + 'bin')) glob.rmdirSyncRecursive(PROJECT_HOME + path.sep + 'bin');
         if (require('fs').existsSync(PROJECT_HOME + path.sep + 'dev')) glob.rmdirSyncRecursive(PROJECT_HOME + path.sep + 'dev');
@@ -6160,7 +6349,7 @@ figlet(' omneedia', {
 				console.log(str.yellow);
 				return;
 			}
-		}
+		};
 
 		if (process.args.sandbox) {
 			console.log = (function () {
@@ -6194,6 +6383,7 @@ figlet(' omneedia', {
             limit: '5000mb'
             , extended: true
         }));
+		
         app.use(bodyParser.urlencoded({
             limit: '5000mb'
             , extended: true
@@ -6216,10 +6406,6 @@ figlet(' omneedia', {
 		app.upload=app.UPLOAD;
 
         app.use(require('cookie-parser')());
-		
-		/*app.get('/Ext.ux.Scheduler2.model.TimeAxisTick',function(req,res){
-			res.end('Ext.define("Ext.ux.Scheduler2.model.TimeAxisTick",{extend: Ext.ux.Scheduler2.model.Range,startDateField: "start",endDateField: "end"});');
-		});*/
 		
 		app.get('/theme.css',function(req,res){
 			var sass = require('node-sass');
@@ -6400,9 +6586,12 @@ figlet(' omneedia', {
             });
             app.get('/logout', function (req, res) {
                 var authType = req.session.authType;
+				if (req.session.user.service=="omneedia") var sid=req.session.user.uid;
+				var url=MSettings.auth[authType.toLowerCase()].logout;
+				if (sid) url+="?pid="+sid;
                 req.session.destroy();
 				try {
-					res.redirect(MSettings.auth[authType.toLowerCase()].logout);
+					res.redirect(url);
 				}catch(e) {
 					res.end('ERROR: authType');
 				}
@@ -6440,10 +6629,19 @@ figlet(' omneedia', {
 
             function ensureAuthenticated(req, res, next) {
 
-                if (MSettings.auth.cas) req.session.authType = "CAS";
+				var sandbox="http://auth.omneedia.com/login";
+				if (ocfg.current['deploy.host']) var sandbox=ocfg.current['deploy.host']+"/login";	
+
+				if (MSettings.auth.cas) req.session.authType = "CAS";
                 if (MSettings.auth.google) req.session.authType = "GOOGLE";
                 if (MSettings.auth.twitter) req.session.authType = "TWITTER";
                 if (MSettings.auth.facebook) req.session.authType = "FACEBOOK";
+				if (MSettings.auth.omneedia) {					
+					req.session.authType = "OMNEEDIA";
+					//req.session.host = sandbox;
+					req.session.host=MSettings.auth.omneedia.server.uri;
+				};
+				
                 if (!req.user) req.user = req.session.user;
                 if (req.user) {
                     return next();
@@ -6451,9 +6649,6 @@ figlet(' omneedia', {
                 res.redirect('/login');
             };
 
-            if (MSettings.auth.local) {
-                // a développer !
-            };
 
             if (MSettings.auth.cas) {
 
@@ -6462,7 +6657,15 @@ figlet(' omneedia', {
                 });
 
             };
+            
+			if (MSettings.auth.omneedia) {
 
+                authom.createServer({
+                    service: "omneedia"
+                });
+
+            };
+			
             if (MSettings.auth.google) {
 
                 var google = MSettings.auth.google;
@@ -6498,7 +6701,7 @@ figlet(' omneedia', {
             };
 
             authom.on("auth", function (req, res, data) {
-                console.log(data);
+
                 if (data.service == "google") {
                     var profile = {};
                     profile.username = data.data;
@@ -6509,7 +6712,7 @@ figlet(' omneedia', {
                         res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
                     });
                 };
-                if (data.service == "cas") {
+				if (data.service == "cas") {
                     var profile = {};
                     profile.provider = "cas";
                     profile.username = data.username;
@@ -6519,7 +6722,15 @@ figlet(' omneedia', {
                         res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
                     });
                 };
-
+				if (data.service == "omneedia") {
+                    var profile = {};
+                    profile.provider = "omneedia";
+                    profile.pid = data.uid;
+					var response=data;
+					req.session.user = response;
+					OASocketonAuth(JSON.stringify(response));
+					res.end("<html><body><script>setTimeout(window.close, 1000);</script></body></html>");
+                };
             });
 
             authom.on("error", function (req, res, data) {
