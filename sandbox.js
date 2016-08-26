@@ -218,7 +218,8 @@ if (cluster.isMaster) {
 		// on lance le process
 		freeport(function(err,port) {
 			var spawn = require('child_process').spawn;
-			var prc = spawn('nohup',  [oa, 'start', '--port',port,'--app',pkg, '--sandbox','--user',prefix,'&>log','&']);
+			var prc = spawn('nohup',  [oa, 'start', '--port',port,'--app',pkg, '--sandbox','--user',prefix,'&>/log','&']);
+			console.log(oa, 'start --port '+port+' --app '+pkg+ ' --sandbox --user '+prefix);
 			var ofile=__dirname+path.sep+'..'+path.sep+'pids'+path.sep+prefix+'.'+pkg+'.inf';
 			if (fs.existsSync(ofile)) {
 				var line=fs.readFileSync(ofile,'utf-8').split(':');

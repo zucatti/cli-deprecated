@@ -6,8 +6,8 @@
 
 $_VERSION = "0.9.8q";
 
-//CDN = "http://cdn.omneedia.com"; //PROD
-CDN = "/cdn"; // DEBUG
+CDN = "http://cdn.omneedia.com"; //PROD
+//CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
@@ -4636,6 +4636,7 @@ function App_Model_Db()
 
 	// list all databases
 	var dbo=manifest.db;
+	if (!dbo) return;
 	for (var i=0;i<dbo.length;i++) {
 		var cxx=MSettings.db[i].uri;
 		var host=cxx.split('@')[1].split('/')[0].split(':')[0];
@@ -6351,7 +6352,7 @@ figlet(' omneedia', {
 			}
 		};
 
-		if (process.args.sandbox) {
+		/*if (process.args.sandbox) {
 			console.log = (function () {
 				var log = console.log;
 				return function (log) {
@@ -6371,7 +6372,7 @@ figlet(' omneedia', {
 			console.debug = function () {
 				app.IO.sockets.emit('debug', str);
 			};
-		};
+		};*/
 
         /*
         setup_settings
@@ -7294,9 +7295,14 @@ figlet(' omneedia', {
 				
 				var port=process.args.port;
 				Manifest.server.port=port;
-				var cluster_host=jsoconf.cluster_host.split(':')[0];
+				
+				if (!jsoconf.cluster_host) var cluster_host=jsoconf.cluster.split(':')[0]; else var cluster_host=jsoconf.cluster_host.split(':')[0];
 				var cluster_port="80";
-				if (jsoconf.cluster_host.split(':').length>1) cluster_port=jsoconf.cluster_host.split(':')[1]*1;
+				if (jsoconf.cluster_host) {
+					if (jsoconf.cluster_host.split(':').length>1) cluster_port=jsoconf.cluster_host.split(':')[1]*1;
+				} else {
+					if (jsoconf.cluster.split(':').length>1) cluster_port=jsoconf.cluster.split(':')[1]*1;					
+				}
 				console.log("Connecting to cluster " + 'http://' + cluster_host + ':' + cluster_port);
 				var socket = require('socket.io-client')('http://' + cluster_host + ':' + cluster_port);
 				socket.on('disconnect', function () {
