@@ -6,8 +6,8 @@
 
 $_VERSION = "0.9.8q";
 
-CDN = "http://cdn.omneedia.com"; //PROD
-//CDN = "/cdn"; // DEBUG
+//CDN = "http://cdn.omneedia.com"; //PROD
+CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
@@ -6638,8 +6638,10 @@ figlet(' omneedia', {
                 if (MSettings.auth.facebook) req.session.authType = "FACEBOOK";
 				if (MSettings.auth.omneedia) {					
 					req.session.authType = "OMNEEDIA";
+
 					//req.session.host = sandbox;
 					req.session.host=MSettings.auth.omneedia.server.uri;
+
 				};
 				
                 if (!req.user) req.user = req.session.user;
