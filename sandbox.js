@@ -1,6 +1,6 @@
 const OMNEEDIA={
 	engine:"sandbox",
-	version: "1.0.0a"
+	version: "1.0.0b"
 };
 
 var fs=require('fs');
@@ -29,12 +29,6 @@ if (!fs.existsSync(__dirname+path.sep+".."+path.sep+"config"+path.sep+"sandbox.j
 	console.log('!! sandbox.config not found. FATAL ERROR');
 	return;
 };
-
-if (!fs.existsSync(__dirname+path.sep+".."+path.sep+"config"+path.sep+"service.template")) {
-	console.log('!! service.template not found. FATAL ERROR');
-	return;
-};
-
 
 function freeport(cb) {
     var net = require('net');
@@ -153,7 +147,6 @@ if (cluster.isMaster) {
 {
 
 	var express=require("express");
-	var watchr = require('watchr');
 	var shelljs = require('shelljs');
 	var list=[];
 	var ACTIVE=-1;
