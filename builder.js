@@ -15,7 +15,6 @@ var check_env=-1;
 
 if (!fs.existsSync(__dirname+path.sep+'..'+path.sep+'packages')) {
 	fs.mkdirSync(__dirname+path.sep+'..'+path.sep+'packages');
-	check_env=1;
 };
 
 function freeport(cb) {
@@ -33,16 +32,6 @@ function freeport(cb) {
 };
 
 if (!fs.existsSync(__dirname+path.sep+'..'+path.sep+'config')) fs.mkdirSync(__dirname+path.sep+'..'+path.sep+'config');
-				   
-if (!fs.existsSync(__dirname+path.sep+'..'+path.sep+'config'+path.sep+'builder.json')) {
-	var cmd={
-		"cluster_host": "CLUSTER_HOST",
-		"threads": "*",
-		"port": "9292"
-	};
-	fs.writeFileSync(__dirname+path.sep+'..'+path.sep+'config'+path.sep+'workers.json',JSON.stringify(cmd,null,4));
-	check_env=1;
-};
 
 //
 
@@ -196,7 +185,6 @@ if (cluster.isMaster) {
 	console.log("  - thread started.");
 	
 	var express=require("express");
-	var watchr = require('watchr');
 	var shelljs = require('shelljs');
 	var list=[];
 	var ACTIVE=-1;

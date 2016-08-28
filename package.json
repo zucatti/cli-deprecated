@@ -50,7 +50,8 @@
 	"xml2js": "0.4.16",
 	"sqwish": "0.2.2",
 	"node-sass": "3.8.0",
-	"node-native-zip": "1.1.0"
+	"node-native-zip": "1.1.0",
+	"socket.io-redis": "*"
   },
   "devDependencies": {},
   "scripts": {
