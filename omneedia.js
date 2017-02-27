@@ -6,8 +6,8 @@
 
 $_VERSION = "0.9.8q";
 
-//CDN = "http://cdn.omneedia.com"; //PROD
-CDN = "/cdn"; // DEBUG
+CDN = "http://cdn.omneedia.com"; //PROD
+//CDN = "/cdn"; // DEBUG
 
 var fs = require('fs');
 var OS = require('os');
