@@ -8,7 +8,7 @@ case "$(uname -s)" in
 
    Linux)
       ABSPATH=$(cd "$(dirname "$0")"; pwd)
-      $ABSPATH/nodejs/bin/node $ABSPATH/omneedia.js $*
+      node $ABSPATH/omneedia.js $*
 
      ;;
 
