@@ -2228,7 +2228,7 @@ copyFileSync = function (srcFile, destFile) {
 };
 
 function make_resources(cb) {
-	if (Manifest.platform == "services") {
+	if (Manifest.platform == "api") {
 		cb();
 		return;
 	};
