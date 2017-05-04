@@ -3,6 +3,7 @@
  * OMNEEDIA CLI
  *
  */
+
 $_VERSION = "0.9.8q";
 CDN = "http://cdn.omneedia.com"; //PROD
 //CDN = "/cdn"; // DEBUG
@@ -3356,144 +3357,85 @@ function build_native() {
 
 function make_res() {
 	// get resource from frameworks
-	if (fs.existsSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "Resources.css")) make_final();
+	fs.access(PROJECT_DEV + path.sep + "webapp" + path.sep + "Resources.css",fs.constants.R_OK | fs.constants.W_OK,function(err) {
+		if (!err) make_final(); else async.map(Settings.RESOURCES, getCSS, make_final);	
+	});
+	/*if (fs.existsSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "Resources.css")) make_final();
 	else {
 		async.map(Settings.RESOURCES, getCSS, make_final);
-	}
+	}*/
 };
 
 function res_html_compile() {
+
 	if (Settings.TYPE == "mobile") {
 		var css = "";
-		if (!fs.existsSync(PROJECT_HOME + path.sep + ".template")) {
-			// OLD SCHOOL
-			var css = "";
-			var links = [];
-			links.push('<meta name="HandheldFriendly" content="true"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">');
-			links.push('<link rel="apple-touch-icon" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon.png') + '">');
-			links.push('<link rel="apple-touch-icon" sizes="72x72" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@72.png') + '" />');
-			links.push('<link rel="apple-touch-icon" sizes="114x114" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@114.png') + '" />');
-			links.push('<link rel="apple-touch-icon" sizes="144x144" href="data:image/png;base64,' + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'icons' + path.sep + 'icon@144.png') + '" />');
-			var linkme = false;
-			var parser = new htmlparser.Parser({
-				onopentag: function (name, attribs) {
-					if (name === "link") linkme = true;
-				}
-				, ontext: function (text) {
-					if (linkme) {
-						css += encodeCSS(text);
-					};
-				}
-				, onclosetag: function (tagname) {
-					if (tagname === "head") {
-						linkme = false;
-					};
-					if (tagname === "html") {
-						var link = require('sqwish').minify(css);
-						var html = fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html", "utf-8");
-						var title = html.split('<title>')[1].split('</title')[0];
-						var spinner = html.split('<script>')[1].split('</script>')[0].replace(/\s{2,}/g, '');
-						//var favicon="<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64,"+b64(PROJECT_WEB+path.sep+'Contents'+path.sep+'Resources'+path.sep+'favicon.ico')+"';docHead.appendChild(newLink);</script>";
-						var body = html.split('<body ')[1].split('<script src="http://cdn.omneedia.com/public/requirejs/require.js"')[0].replace(/\s{2,}/g, '');
-						var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
-						//var launcher='<script src="Contents/Application.js"></script>';
-						if (process.argv.indexOf("unsafe") > -1) var html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src * data:; img-src \'self\' data:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'"><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
-						else var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style>' + links.join('') + '</head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + launcher + '</body></html>';
-						var html = html.replace(/>>/g, '>');
-						html = html.replace('<title>', '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>');
-						fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", html);
-						make_res();
-					}
-				}
+		fs.access(PROJECT_HOME + path.sep + ".style",fs.constants.R_OK | fs.constants.W_OK,function(err) {
+			if (err) {
+				make_res();	
+				return;
+			};
+			fs.readFile(PROJECT_HOME + path.sep + ".style", "utf-8",function(err,tpl) {
+				tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+				tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+				tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+				tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+				tpl = tpl.replace(/{ICON}/g, 'data:image/png;base64,' + b64(PROJECT_HOME + path.sep + "src" + path.sep + "Contents" + path.sep + "Resources" + path.sep + "startup" + path.sep + "logo.png"));
+				var link = require('sqwish').minify(tpl);
+				fs.readFile(PROJECT_HOME + path.sep + '.template', 'utf-8',function(err,tpl){
+					tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+					tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+					tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+					tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+					tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
+					if (process.argv.indexOf("unsafe") > -1) tpl = tpl.replace('<head>', '<head><meta http-equiv="Content-Security-Policy" content="img-src: \'self\' data:;default-src * data:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
+					tpl = tpl.replace('<head>', '<head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">');
+					fs.readFile(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap_mobi.tpl','utf-8',function(err,launcher) {
+						tpl = tpl.replace('</head>', '<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
+						tpl = tpl.replace('</body>', launcher + '</body>');
+						var minify = require('html-minifier').minify;
+						var min = minify(tpl.replace(/\t/g, '').replace(/\n/g, ''));
+						fs.writeFile(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min,function() {
+							make_res();
+						});
+					});					
+				});			
 			});
-			parser.write(fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html"));
-			parser.end();
-		}
-		else {
-			// NEW SCHOOL
-			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + ".style", "utf-8");
-			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
-			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
-			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
-			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
-			tpl = tpl.replace(/{ICON}/g, 'data:image/png;base64,' + b64(PROJECT_HOME + path.sep + "src" + path.sep + "Contents" + path.sep + "Resources" + path.sep + "startup" + path.sep + "logo.png"));
-			var link = require('sqwish').minify(tpl);
-			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + '.template', 'utf-8');
-			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
-			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
-			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
-			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
-			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
-			if (process.argv.indexOf("unsafe") > -1) tpl = tpl.replace('<head>', '<head><meta http-equiv="Content-Security-Policy" content="img-src: \'self\' data:;default-src * data:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'">');
-			tpl = tpl.replace('<head>', '<head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">');
-			var launcher = fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap_mobi.tpl');
-			tpl = tpl.replace('</head>', '<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
-			tpl = tpl.replace('</body>', launcher + '</body>');
-			var minify = require('html-minifier').minify;
-			var min = minify(tpl.replace(/\t/g, '').replace(/\n/g, ''));
-			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min);
-			make_res();
-		}
+		});
 	};
 	if (Settings.TYPE == "desktop") {
 		var css = "";
-		if (!fs.existsSync(PROJECT_HOME + path.sep + ".template")) {
-			// OLD SCHOOL
-			var parser = new htmlparser.Parser({
-				onopentag: function (name, attribs) {
-					if (name === "link") linkme = true;
-				}
-				, ontext: function (text) {
-					if (linkme) {
-						css += encodeCSS(text);
-					};
-				}
-				, onclosetag: function (tagname) {
-					if (tagname === "head") {
-						linkme = false;
-					};
-					if (tagname === "html") {
-						var link = require('sqwish').minify(css);
-						var html = fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html", "utf-8");
-						var title = html.split('<title>')[1].split('</title')[0];
-						var spinner = html.split('<script>')[1].split('</script>')[0].replace(/\s{2,}/g, '');
-						var favicon = "<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
-						var body = html.split('<body ')[1].split('<script src="http://cdn.omneedia.com/public/requirejs/require.js"')[0].replace(/\s{2,}/g, '');
-						var launcher = "<script>window.setTimeout(function(){var script=document.createElement('script');script.src=\"Contents/Application.js\";document.getElementsByTagName('body')[0].appendChild(script);},1000);</script>";
-						var html = '<!DOCTYPE html><html><head><title>' + title + '</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><script>' + spinner + '</script><style type="text/css">' + link + '</style></head><body ' + body + '><link rel=stylesheet type=text/css href="Contents/Resources.css"></link>' + favicon + launcher + '</body></html>';
-						var html = html.replace(/>>/g, '>');
-						fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", html);
-						make_res();
-					}
-				}
+		fs.access(PROJECT_HOME + path.sep + ".style",fs.constants.R_OK | fs.constants.W_OK,function(err) {
+			if (err) {
+				make_res();	
+				return;
+			};
+			fs.readFile(PROJECT_HOME + path.sep + ".style", "utf-8",function(err,tpl) {
+				tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+				tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+				tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+				tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+				tpl = tpl.replace(/{ICON}/g, 'data:image/png;base64,' + b64(PROJECT_HOME + path.sep + "src" + path.sep + "Contents" + path.sep + "Resources" + path.sep + "startup" + path.sep + "logo.png"));
+				var link = require('sqwish').minify(tpl);
+				fs.readFile(PROJECT_HOME + path.sep + '.template', 'utf-8',function(err,tpl) {
+					tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
+					tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
+					tpl = tpl.replace(/{TITLE}/g, Manifest.title);
+					tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
+					tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
+					var favicon = "<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
+					fs.readFile(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap_prod.tpl','utf-8',function(err,launcher) {
+						tpl = tpl.replace('</head>', '<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
+						tpl = tpl.replace('</body>', favicon + launcher + '</body>');
+						var minify = require('html-minifier').minify;
+						var min = minify(tpl.replace(/\t/g, '').replace(/\n/g, ''));	
+						fs.writeFile(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min,function() {
+							make_res();
+						});
+					});					
+				});
 			});
-			parser.write(fs.readFileSync(PROJECT_HOME + path.sep + "src" + path.sep + "index.html"));
-			parser.end();
-		}
-		else {
-			// NEW SCHOOL
-			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + ".style", "utf-8");
-			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
-			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
-			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
-			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
-			tpl = tpl.replace(/{ICON}/g, 'data:image/png;base64,' + b64(PROJECT_HOME + path.sep + "src" + path.sep + "Contents" + path.sep + "Resources" + path.sep + "startup" + path.sep + "logo.png"));
-			var link = require('sqwish').minify(tpl);
-			var tpl = fs.readFileSync(PROJECT_HOME + path.sep + '.template', 'utf-8');
-			tpl = tpl.replace(/{COLOR}/g, Manifest.splashscreen.background);
-			tpl = tpl.replace(/{BKCOLOR}/g, Manifest.splashscreen.color);
-			tpl = tpl.replace(/{TITLE}/g, Manifest.title);
-			tpl = tpl.replace(/{DESCRIPTION}/g, Manifest.description);
-			tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
-			var favicon = "<script>var docHead=document.getElementsByTagName('head')[0];var newLink=document.createElement('link');newLink.rel='shortcut icon';newLink.href='data:image/png;base64," + b64(PROJECT_WEB + path.sep + 'Contents' + path.sep + 'Resources' + path.sep + 'favicon.ico') + "';docHead.appendChild(newLink);</script>";
-			var launcher = fs.readFileSync(__dirname + path.sep + 'tpl' + path.sep + 'oa' + path.sep + 'bootstrap_prod.tpl');
-			tpl = tpl.replace('</head>', '<style type="text/css">' + link + '</style><link rel=stylesheet type=text/css href="Contents/Resources.css"></link></head>');
-			tpl = tpl.replace('</body>', favicon + launcher + '</body>');
-			var minify = require('html-minifier').minify;
-			var min = minify(tpl.replace(/\t/g, '').replace(/\n/g, ''));
-			fs.writeFileSync(PROJECT_DEV + path.sep + "webapp" + path.sep + "index.html", min);
-			make_res();
-		};
+		});
 	}
 };
 
@@ -3507,6 +3449,7 @@ function generateCode(data) {
 	idx = qrimgtag.indexOf("\"");
 	return "data:image/png;base64," + qrimgtag.split('"')[0];
 };
+
 /********
 
 Config
@@ -4254,48 +4197,6 @@ function do_push() {
 					var AdmZip = require('adm-zip');
 					var _uploadme = [
 					];
-					/*for (var i=0;i<MSettings.db.length;i++) {
-						console.log('\n  - Processing database '+MSettings.db[i].name);
-						var uri=MSettings.db[i].uri;
-
-						var user=uri.split('://')[1].split('/')[0];
-
-						var host=user.split('@')[1];
-						user=user.split('@')[0];
-						var password=user.split(':');
-						if (password.length>1) password=" -p"+password[1]; else password="";
-						user=user.split(':')[0];
-						var port=host.split(':');
-						if (port.length>1) port=port[1]; else port=3306;
-						host=host.split(':')[0];
-						var db=uri.substr(uri.lastIndexOf('/')+1,uri.length);
-						fs.mkdirSync(__dirname+path.sep+'.db'+path.sep+db);
-						shelljs.exec('mysqldump --single-transaction '+db+' -h '+host+' -P '+port+' -u '+user+password+' --tab "'+__dirname+path.sep+'.db'+path.sep+db+'"');
-						var dir=walk(__dirname+path.sep+'.db'+path.sep+db);
-
-						_uploadme.push("/db/create/"+db);
-
-						for (var j=0;j<dir.length;j++) {
-							if (dir[j].indexOf('.txt')>-1) {
-								console.log('    processing table '+path.basename(dir[j]).split('.txt')[0]);
-								var zipme = new AdmZip();
-								zipme.addLocalFile(dir[j]);
-								zipme.writeZip(dir[j].split('.txt')[0]+'.zip');
-								shelljs.rm(dir[j]);
-								_uploadme.push("/db/data/"+db+"/"+path.basename(dir[j]).split('.txt')[0]+"?"+dir[j].split('.txt')[0]+'.zip');
-							} else {
-								_uploadme.push("/db/fields/"+db+"?"+dir[j]);
-							}
-						};
-					};
-					if (MSettings.db.length>0) {
-						var ProgressBar = require('pace')(_uploadme.length);
-
-						DB_UPLOAD_SANDBOX(response.host,_uploadme,ProgressBar,__PID,PACKAGE_NAME,0,function(){
-							console.log('c fé');
-						});
-
-					};*/
 					var uniqueid = require('node-uuid');
 					var unik = uniqueid.v4();
 					var azip = new zip();
@@ -5303,7 +5204,7 @@ function App_Update(nn, cb) {
 		for (var i = 0; i < api_dir.length; i++) {
 			try {
 				if (api_dir[i].indexOf('.js') > -1) {
-					console.log('\t' + api_dir[i]);
+					console.log('\t' + api_dir[i].split('.js')[0]);
 					var text = fs.readFileSync(PROJECT_HOME + path.sep + 'src' + path.sep + 'Contents' + path.sep + 'Services' + path.sep + api_dir[i], 'utf-8');
 					var idx = text.indexOf('module.exports');
 					if (idx > -1) text = text.substr(idx, text.length).split('=')[1].trim().split(';')[0];
@@ -5316,6 +5217,7 @@ function App_Update(nn, cb) {
 		};
 	};
 	make_resources(function () {
+		
 		// updating manifest
 		manifest.namespace = PACKAGE_NAME;
 		manifest.title = manifest.title.replace('{TITLE}', PACKAGE_NAME);
@@ -5393,6 +5295,7 @@ function App_Update(nn, cb) {
 		};
 		Settings.FRAMEWORKS = frameworks;
 		Settings.RESOURCES = resources;
+		
 		if (manifest.platform == "desktop") {
 			Settings.RESOURCES.push(CDN + "/omneedia/res/webapp.css");
 			// old way to manipulate css ux
@@ -5499,20 +5402,7 @@ function App_Update(nn, cb) {
 		if (manifest.blur) Settings.blur = manifest.blur;
 		else Settings.blur = 1;
 		fs.writeFileSync(PROJECT_HOME + path.sep + 'src' + path.sep + 'Contents' + path.sep + 'Settings.js', 'Settings=' + JSON.stringify(Settings));
-		// OLD SCHOOL
-		if (Manifest.platform != "services") {
-			if (!fs.existsSync(PROJECT_HOME + path.sep + '.template')) {
-				var ndx = fs.readFileSync(PROJECT_HOME + path.sep + 'src' + path.sep + 'index.html', 'utf-8');
-				ndx = ndx.split('<title>')[0] + '<title>' + manifest.title + '</title>' + ndx.split('</title>')[1];
-				var style = fs.readFileSync(PROJECT_HOME + path.sep + '.style', 'utf-8');
-				style = style.replace('{COLOR}', manifest.splashscreen.background);
-				style = style.replace('{BKCOLOR}', manifest.splashscreen.color);
-				style = style + '\t.omneedia-overlay{z-index: 9999999999;position:absolute;left:0px;top:0px;width:100%;height:100%;display:none;}\n';
-				ndx = ndx.split('<style type="text/css">')[0] + '<style type="text/css">\n' + style + '\t</style>' + ndx.split('</style>')[1];
-				fs.writeFileSync(PROJECT_HOME + path.sep + 'src' + path.sep + 'index.html', ndx);
-			}
-			else {
-				// NEW SCHOOL
+		if (Manifest.platform != "api") {
 				var tpl = fs.readFileSync(PROJECT_HOME + path.sep + '.template', 'utf-8');
 				if (fs.existsSync(PROJECT_HOME + path.sep + '.bootstrap')) {
 					var _btt = fs.readFileSync(PROJECT_HOME + path.sep + '.bootstrap', 'utf-8').trim();
@@ -5530,7 +5420,6 @@ function App_Update(nn, cb) {
 				tpl = tpl.replace(/{DESCRIPTION}/g, manifest.description);
 				tpl = tpl.replace(/{ICON}/g, "Contents/Resources/startup/logo.png");
 				fs.writeFileSync(PROJECT_HOME + path.sep + 'src' + path.sep + 'index.html', tpl);
-			};
 		};
 		if (!fs.existsSync(PROJECT_HOME + path.sep + 'etc' + path.sep + "settings.json")) {
 			if (!fs.existsSync(PROJECT_HOME + path.sep + 'etc')) fs.mkdirSync(PROJECT_HOME + path.sep + 'etc');
